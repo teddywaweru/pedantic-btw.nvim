@@ -1,4 +1,5 @@
 local M = {}
+-- local special_keys = { "j", "k", "q", "d" }
 M.add_autocmds = function()
 	vim.api.nvim_create_augroup("PBTWAddingBuffer", { clear = true })
 	vim.api.nvim_create_autocmd("BufReadPost", {
@@ -42,11 +43,18 @@ M.add_autocmds = function()
 
 	vim.api.nvim_create_augroup("PBTWRemoveBuffer", { clear = true })
 	vim.api.nvim_create_autocmd("BufDelete", {
-		desc = "Removes Buffer from bufferlistwhen closed",
+		desc = "Removes Buffer from bufferlist when closed",
 		group = "PBTWRemoveBuffer",
 		callback = function()
 			local bufnr = vim.fn.bufnr(vim.fn.expand("<afile>"))
 
+			if #Keys > 0 then
+				for i = 0, #Keys do
+					if Buffers["" .. bufnr]["key"] == Keys[i] then
+						Keys[i] = nil
+					end
+				end
+			end
 			if type(Buffers["" .. bufnr]) == "table" then
 				Buffers["" .. bufnr] = nil
 			end
@@ -62,6 +70,15 @@ M.assign_key = function(buffername, bufferpath)
 	end
 	for idx = 1, #buffername do
 		local char = buffername:sub(idx, idx)
+
+		-- for special_idx = 0, #special_keys do
+		-- 		print("Trying to check key to assign")
+		-- 	if char == special_keys[special_idx] then
+		-- 		print("Assigning a Special Key?")
+		-- 	goto next_char_in_buffername
+		-- 	end
+		-- end
+
 		for key_idx = 0, #Keys do
 			if char == Keys[key_idx] then
 				if idx == #buffername then
@@ -76,7 +93,11 @@ M.assign_key = function(buffername, bufferpath)
 				end
 			end
 		end
+			-- ::next_char_in_buffername::
 	end
+end
+
+M.edit_buffer_tab = function(bufnr) 
 end
 
 M.random_key = function()
