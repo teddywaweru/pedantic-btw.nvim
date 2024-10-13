@@ -18,9 +18,9 @@ M.display = function()
 	-- print("Keys" .. vim.inspect(Keys))
 
 	-- Highlights
-	vim.api.nvim_set_hl(0, "DutchTabsLetter",
+	vim.api.nvim_set_hl(0, "PedanticTabsLetter",
 		{ fg = '#ff007c', bold = true, ctermfg = 198, cterm = { bold = true }, default = true });
-	vim.api.nvim_set_hl(0, "DutchTabsPath",
+	vim.api.nvim_set_hl(0, "PedanticTabsPath",
 		{ bg = '#FFFFFF', fg = '#0C1B33', bold = true, ctermfg = 198, cterm = { bold = true }, default = true });
 
 	local buffer_details = {}
@@ -70,8 +70,8 @@ M.display = function()
 
 	local i = 0
 	for _, values in pairs(Buffers) do
-		vim.api.nvim_buf_add_highlight(buf, 0, "DutchTabsLetter", i, values["key_idx"] - 1, values["key_idx"])
-		vim.api.nvim_buf_add_highlight(buf, 0, "DutchTabsPath", i + 1, 0, -1)
+		vim.api.nvim_buf_add_highlight(buf, 0, "PedanticTabsLetter", i, values["key_idx"] - 1, values["key_idx"])
+		vim.api.nvim_buf_add_highlight(buf, 0, "PedanticTabsPath", i + 1, 0, -1)
 		i = i + 3
 	end
 end
