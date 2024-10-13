@@ -42,11 +42,16 @@ M.add_autocmds = function()
 	})
 
 	vim.api.nvim_create_augroup("PBTWRemoveBuffer", { clear = true })
+	vim.api.nvim_create_augroup("PBTWDeleteBuffer", { clear = true })
 	vim.api.nvim_create_autocmd("BufDelete", {
 		desc = "Removes Buffer from bufferlist when closed",
-		group = "PBTWRemoveBuffer",
+		group = "PBTWDeleteBuffer",
 		callback = function()
-			local bufnr = vim.fn.bufnr(vim.fn.expand("<afile>"))
+			local filename = vim.fn.expand("<afile>")
+			if filename == "" then
+				return
+			end
+			local bufnr = vim.fn.bufnr(filename)
 
 			if #Keys > 0 then
 				for i = 0, #Keys do
