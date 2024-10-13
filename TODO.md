@@ -25,7 +25,7 @@
 - [] Handle QuickFix List display(and any other that may exist for the same)
 
 ## Developer Experience
-- [x]Organize the codebase into manageable modules
+- [x] Organize the codebase into manageable modules
 - [] Add function call to track Bufferlist hashmap
 
 ## Navigate open buffers appropriately based on where they were initially opened
