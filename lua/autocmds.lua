@@ -41,7 +41,23 @@ M.add_autocmds = function()
 		end
 	})
 
-	vim.api.nvim_create_augroup("PBTWRemoveBuffer", { clear = true })
+	vim.api.nvim_create_augroup("PBTWDeleteTab", { clear = true })
+	vim.api.nvim_create_autocmd("TabClosed", {
+		desc = "Moves buffers in current tab to first tab when current tab closed",
+		group = "PBTWDeleteTab",
+		callback = function()
+			--on tab close, <afile> expands to tab number
+			local tab = vim.fn.expand("<afile>")
+			local tabs = vim.api.nvim_list_tabpages()
+					vim.notify("current tab " .. tab)
+			for bufnr, buf_details in pairs(Buffers) do
+				if buf_details["tab"] == tonumber(tab) then
+					Buffers["" .. bufnr]["tab"] = tabs[1]
+				end
+			end
+		end
+
+	})
 	vim.api.nvim_create_augroup("PBTWDeleteBuffer", { clear = true })
 	vim.api.nvim_create_autocmd("BufDelete", {
 		desc = "Removes Buffer from bufferlist when closed",
