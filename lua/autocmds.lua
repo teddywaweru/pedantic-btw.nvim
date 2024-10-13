@@ -93,11 +93,11 @@ M.assign_key = function(buffername, bufferpath)
 				end
 			end
 		end
-			-- ::next_char_in_buffername::
+		-- ::next_char_in_buffername::
 	end
 end
 
-M.edit_buffer_tab = function(bufnr) 
+M.edit_buffer_tab = function(bufnr)
 end
 
 M.random_key = function()
