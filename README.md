@@ -9,3 +9,16 @@ similarly named files. Having these buffers separated makes it easier to maintai
 the project.
 The workflow would involve having tabs separate buffers and windows that are in use for the project.
 
+To enable on Lazy Plugin Manager
+
+```viml
+{
+  "teddywaweru/pedantic-btw.nvim",
+  event = "VeryLazy",
+  opts = {},
+  keys = {
+  {
+    'gj', '<cmd>lua require("pedantic-btw").buffer_list()<CR>', 'n', desc = "Open Buffer List" }
+  },
+}
+```
