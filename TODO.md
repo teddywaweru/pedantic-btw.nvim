@@ -23,6 +23,8 @@
 - [] Separate buffer list depending on their tabs(and make it an optional setting)
 - [] What to display when there are no active buffers?
 - [] Handle QuickFix List display(and any other that may exist for the same)
+- [] Handle invalid input. Currently transfers to editor if input is not in list
+- [] Handle empty bufferlist at start
 
 ## Developer Experience
 - [x] Organize the codebase into manageable modules

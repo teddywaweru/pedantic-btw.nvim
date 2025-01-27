@@ -6,12 +6,9 @@ Keys = {}
 ExitKeys = { "q", "" }
 M.setup = function()
 	require("autocmds").add_autocmds()
-	vim.keymap.set('n', 'gj', '<cmd>lua require("pedantic-btw").buffer_list()<CR>')
-	print("Initialize setup")
-	return Buffers
+	-- return M
 end
 M.buffer_list = function()
-	print("Displaying BufferList")
 	require("bufferlist").display()
 	vim.cmd.redraw()
 
@@ -64,9 +61,8 @@ M.config = function()
 	print("Initialize config")
 end
 
-M.store_bufferlist = function ()
-	
+M.store_bufferlist = function()
+
 end
 
 return M
-
