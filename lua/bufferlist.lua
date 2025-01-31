@@ -1,8 +1,16 @@
 local M = {}
 
 M.display = function()
-	-- vim.api.nvim_command('botright vnew')
-	-- local buf = vim.api.nvim_get_current_buf()
+	local buffers = 0
+	for _ in pairs(Buffers) do
+		buffers = buffers + 1
+	end
+
+	if buffers == 0 then
+		vim.notify("No buffers added to Bufferlist yet")
+		return 0
+	end
+
 	local buf = vim.api.nvim_create_buf(false, true)
 
 	vim.api.nvim_buf_set_name(buf, "BufferList #" .. buf)
@@ -13,9 +21,6 @@ M.display = function()
 
 
 	vim.api.nvim_buf_set_option(buf, 'modifiable', true)
-	-- local buffer_count = vim.api.nvim_win_get_height(win) - 1
-	-- print("BufferList" .. vim.inspect(Buffers))
-	-- print("Keys" .. vim.inspect(Keys))
 
 	-- Highlights
 	vim.api.nvim_set_hl(0, "PedanticTabsLetter",
