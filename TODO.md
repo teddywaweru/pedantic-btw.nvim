@@ -9,7 +9,7 @@
 - [x] Have a quick navigation window/list that shows names and keystroke
 - [x] Open bufs on keystrokes
 - [x] Make window non-modifiable, and disable all other keystrokes apart from exit
-- []Close window on exits
+- [x]Close window on exits
 
 ## User Experience
 - [x] Setting up highlighting colors for texts and floating window layout
@@ -21,10 +21,12 @@
 - [x] Handle buffer deletion
 - [x] List needs to automatically expand depending on count of buffers
 - [] Separate buffer list depending on their tabs(and make it an optional setting)
-- [] What to display when there are no active buffers?
+- [x] What to display when there are no active buffers?
 - [] Handle QuickFix List display(and any other that may exist for the same)
-- [] Handle invalid input. Currently transfers to editor if input is not in list
-- [] Handle empty bufferlist at start
+- [x] Handle invalid input. Currently transfers to editor if input is not in list
+- [x] Handle empty bufferlist at start
+- [x] Modifiable exit keys for users
+- [] How to handle Ctrl-C exit command
 
 ## Developer Experience
 - [x] Organize the codebase into manageable modules
