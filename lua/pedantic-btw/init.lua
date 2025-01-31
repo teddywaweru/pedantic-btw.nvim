@@ -3,24 +3,36 @@ Buffers = {}
 Tabs = {}
 Windows = {}
 Keys = {}
-ExitKeys = { "q", "" }
-M.setup = function()
+ExitKeys = {}
+function M.setup(opts)
+	if opts["exit_keys"] then
+		for _, key in ipairs(opts["exit_keys"]) do
+			table.insert(ExitKeys, key)
+		end
+	end
 	require("autocmds").add_autocmds()
-	-- return M
 end
-M.buffer_list = function()
-	require("bufferlist").display()
+
+function M.buffer_list()
+	if require("bufferlist").display() == 0 then
+		return
+	end
 	vim.cmd.redraw()
 
 	M.select_buffer()
 end
-M.select_buffer = function()
+
+function M.select_buffer()
 	while true do
 		local ok, char = pcall(vim.fn.getcharstr)
 		if not ok then
 			vim.api.nvim_feedkeys(char, 'n', false)
 			break
 		end
+			if char == "" then
+				vim.api.nvim_buf_delete(0, { force = true })
+				return
+			end
 		for _, exit_key in pairs(ExitKeys) do
 			if char == exit_key then
 				vim.api.nvim_buf_delete(0, { force = true })
@@ -42,26 +54,26 @@ M.select_buffer = function()
 				return
 			else
 				if idx == buffers - 1 then
-					vim.api.nvim_buf_delete(0, { force = true })
-					vim.api.nvim_feedkeys(char, 'n', true)
+					-- vim.api.nvim_buf_delete(0, { force = true })
 					vim.notify("Incorrect Key?")
-					return
+					break
 				end
 			end
 			idx = idx + 1
 		end
 	end
 end
-M.edit_buffer_tab = function(bufnr)
+
+function M.edit_buffer_tab(bufnr)
 	local ok, char = pcall(vim.fn.getcharstr)
 	print("TabList:" .. "")
 end
 
-M.config = function()
+function M.config()
 	print("Initialize config")
 end
 
-M.store_bufferlist = function()
+function M.store_bufferlist()
 
 end
 
