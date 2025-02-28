@@ -1,6 +1,12 @@
 local M = {}
+-- Contains all buffer info that is used in the plugin
+-- with the bufnr set as the key value
 Buffers = {}
+-- Contains all tab info that is used in the plugin
+-- with the tubnr set as the key value
 Tabs = {}
+-- Contains all window info that is used in the plugin
+-- with the winnr set as the key value
 Windows = {}
 Keys = {}
 ExitKeys = {}
@@ -26,6 +32,7 @@ function M.setup(opts)
 	require("autocmds").add_autocmds(config)
 end
 
+-- Open floating window with open buffer details
 function M.buffer_list()
 	if require("bufferlist").display() == 0 then
 		return
@@ -35,6 +42,7 @@ function M.buffer_list()
 	M.select_buffer()
 end
 
+-- Handle buffer selection displayed from buffer_list() function
 function M.select_buffer()
 	while true do
 		local ok, char = pcall(vim.fn.getcharstr)
