@@ -10,7 +10,20 @@ function M.setup(opts)
 			table.insert(ExitKeys, key)
 		end
 	end
-	require("autocmds").add_autocmds()
+
+	-- local track_tabs = opts["track_tabs"]
+	--- @class Config
+	--- @field track_windows boolean
+	--- @field enable_bufferlist boolean
+	--- @field bufferlist_exit_keys table
+
+	--- @type Config
+	local config = {
+		track_windows = true,
+		enable_bufferlist = true,
+		bufferlist_exit_keys = {}
+	}
+	require("autocmds").add_autocmds(config)
 end
 
 function M.buffer_list()
