@@ -1,6 +1,7 @@
 local M = {}
 -- local special_keys = { "j", "k", "q", "d" }
-M.add_autocmds = function()
+---@param config Config
+function M.add_autocmds(config)
 	vim.api.nvim_create_augroup("PBTWAddingBuffer", { clear = true })
 	vim.api.nvim_create_autocmd("BufReadPost", {
 		desc = "Adds Buffer to its window list when opened for the first time",
@@ -15,6 +16,11 @@ M.add_autocmds = function()
 			-- Updates tabs list
 			if Tabs[tabnr] == nil then
 				Tabs["" .. tabnr] = {}
+			--check if winnr exists in Tabs table
+			if config.track_windows == false then
+				vim.notify("Not tracking windows...")
+				return
+			else
 				local win_added_to_Tabs = false
 				for _, v in pairs(Tabs["" .. tabnr]["windows"]) do
 					if v == winnr then
@@ -47,7 +53,6 @@ M.add_autocmds = function()
 				Buffers["" .. bufnr]["key"] = key[1]
 				Buffers["" .. bufnr]["key_idx"] = key[2]
 			end
-
 		end
 	})
 
@@ -68,6 +73,7 @@ M.add_autocmds = function()
 		end
 
 	})
+	if config.track_windows == true then
 		vim.api.nvim_create_augroup("PBTWDeleteWindow", { clear = true })
 		vim.api.nvim_create_autocmd("WinClosed", {
 			desc = "Moves buffers in current window to first window in tab when current window is closed",
@@ -113,6 +119,7 @@ M.add_autocmds = function()
 				-- end
 			end
 		})
+	end
 	vim.api.nvim_create_augroup("PBTWDeleteBuffer", { clear = true })
 	vim.api.nvim_create_autocmd("BufDelete", {
 		desc = "Removes Buffer from bufferlist when closed",
