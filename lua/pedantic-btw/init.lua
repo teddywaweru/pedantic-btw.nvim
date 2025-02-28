@@ -64,6 +64,7 @@ function M.select_buffer()
 				vim.api.nvim_buf_delete(0, { force = true })
 				vim.api.nvim_set_current_tabpage(buffer_details["tab"])
 				vim.cmd("b " .. bufnr)
+
 				return
 			else
 				if idx == buffers - 1 then
@@ -88,6 +89,24 @@ end
 
 function M.store_bufferlist()
 
+end
+
+function M.print_bufferlist()
+	for _, buffer_details in pairs(Buffers) do
+		for k, v in pairs(buffer_details) do
+			print("" .. k .. ":" .. tostring(v))
+		end
+	end
+end
+
+function M.print_tabs()
+	-- vim.notify("Called Print Tabs" .. Tabs[1])
+	for tabnr, tab_tables in pairs(Tabs) do
+		vim.notify("Tab Number " .. tabnr)
+		for k, v in pairs(tab_tables) do
+			print("" .. k .. ":" .. table.concat(v, ","))
+		end
+	end
 end
 
 return M
