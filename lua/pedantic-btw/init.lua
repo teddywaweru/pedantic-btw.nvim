@@ -71,6 +71,7 @@ function M.select_buffer()
 			if char == buffer_details["key"] then
 				vim.api.nvim_buf_delete(0, { force = true })
 				vim.api.nvim_set_current_tabpage(buffer_details["tab"])
+				-- vim.api.nvim_set_current_win(buffer_details["window"])
 				vim.cmd("b " .. bufnr)
 
 				return

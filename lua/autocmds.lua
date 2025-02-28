@@ -15,9 +15,25 @@ M.add_autocmds = function()
 			-- Updates tabs list
 			if Tabs[tabnr] == nil then
 				Tabs["" .. tabnr] = {}
+				local win_added_to_Tabs = false
+				for _, v in pairs(Tabs["" .. tabnr]["windows"]) do
+					if v == winnr then
+						win_added_to_Tabs = true
+						break
+					end
+				end
+				if not win_added_to_Tabs then
+					Tabs["" .. tabnr]["windows"][#Tabs["" .. tabnr]["windows"] + 1] = winnr
+				end
+				-- Updates windows list
+				if Windows["" .. winnr] == nil then
+					Windows["" .. winnr] = {}
+					Windows["" .. winnr]["buffers"] = {}
+					Windows["" .. winnr]["tab"] = {}
+				end
+				Windows["" .. winnr]["buffers"] = bufnr
+				Windows["" .. winnr]["tab"] = tabnr
 			end
-			Tabs["" .. tabnr]["buffers"] = bufnr
-			Tabs["" .. tabnr]["windows"] = winnr
 
 			-- Updates buffers list
 			if Buffers["" .. bufnr] == nil then
@@ -32,12 +48,6 @@ M.add_autocmds = function()
 				Buffers["" .. bufnr]["key_idx"] = key[2]
 			end
 
-			-- Updates windows list
-			if Windows["" .. winnr] == nil then
-				Windows["" .. winnr] = {}
-			end
-			Windows["" .. winnr]["buffers"] = bufnr
-			Windows["" .. winnr]["tab"] = tabnr
 		end
 	})
 
@@ -58,6 +68,51 @@ M.add_autocmds = function()
 		end
 
 	})
+		vim.api.nvim_create_augroup("PBTWDeleteWindow", { clear = true })
+		vim.api.nvim_create_autocmd("WinClosed", {
+			desc = "Moves buffers in current window to first window in tab when current window is closed",
+			group = "PBTWDeleteWindow",
+			callback = function()
+				local closed_winnr = vim.fn.expand("<afile>")
+				-- Temporary Windows are not added to the BTW tables,
+				-- ie. Telescope Browsing Windows
+				if Windows["" .. closed_winnr] == nil then
+					return
+				end
+
+				for _, winnr in Tabs["" .. Windows["" .. closed_winnr]["tab"]]["windows"] do
+					if winnr ~= closed_winnr then
+						-- Just move Buffers to first valid window in Tab
+						for bufnr in Windows["" .. winnr]["buffers"] do
+							Windows["" .. winnr][#Windows["" .. winnr + 1]]["buffers"] = bufnr
+							Buffers["" .. bufnr]["window"] = winnr
+						end
+						break
+					end
+				end
+				-- FIX: What happens if closed_winnr has already been iterated?
+				for tabs_key, winnr in ipairs(Tabs["" .. Windows["" .. closed_winnr]["tab"]]["windows"]) do
+					if winnr == closed_winnr then
+						-- WARNING:  Unclear if addressing with tabs_key will lead to
+						-- empty index in table
+						Tabs["" .. Windows["" .. closed_winnr]["tab"]]["window"][tabs_key] = nil
+					end
+				end
+
+				Windows["" .. closed_winnr] = nil
+
+				-- TODO: Delete winnr in Tabs table
+				-- Buffers
+				-- Update winnr
+				-- Windows
+				-- move buffers to new winnr
+				-- Tabs[""..Windows["" ..closed_winr]["tab"]]
+				-- Handle deletions from Buffers, Windows and Tabs tables
+				-- for buffer in reassign_bufs do
+				-- Change  data in Windows
+				-- end
+			end
+		})
 	vim.api.nvim_create_augroup("PBTWDeleteBuffer", { clear = true })
 	vim.api.nvim_create_autocmd("BufDelete", {
 		desc = "Removes Buffer from bufferlist when closed",
