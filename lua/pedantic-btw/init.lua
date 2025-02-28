@@ -50,10 +50,10 @@ function M.select_buffer()
 			vim.api.nvim_feedkeys(char, 'n', false)
 			break
 		end
-			if char == "" then
-				vim.api.nvim_buf_delete(0, { force = true })
-				return
-			end
+		if char == "" then
+			vim.api.nvim_buf_delete(0, { force = true })
+			return
+		end
 		for _, exit_key in pairs(ExitKeys) do
 			if char == exit_key then
 				vim.api.nvim_buf_delete(0, { force = true })
