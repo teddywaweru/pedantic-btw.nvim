@@ -9,7 +9,14 @@
 - [x] Have a quick navigation window/list that shows names and keystroke
 - [x] Open bufs on keystrokes
 - [x] Make window non-modifiable, and disable all other keystrokes apart from exit
-- [x]Close window on exits
+- [x] Close window on exits
+
+## Bugs
+- [] Handle closed windows and closed buffers ie. update Buffers table
+- [] Handle buffers that miss buffername and bufferpath
+    - [] Assigning Random Key, and temporary name
+    - [] dap.txt help file is not removed from Buffers when closed(may have to do with bufnr assignment?)
+    - [] Handling No Name buffer - buffer edited when Nvim is opened initially
 
 ## User Experience
 - [x] Setting up highlighting colors for texts and floating window layout
@@ -27,6 +34,13 @@
 - [x] Handle empty bufferlist at start
 - [x] Modifiable exit keys for users
 - [] How to handle Ctrl-C exit command
+- [] Adding buffers that are opened when Neovim is started ie. "nvim new_file.txt"
+- [] Handling when a buffer is not on the BufferList is deleted?
+- [] Handle buffer renaming
+- [x] Maintaining window information for buffers
+
+## opts
+- [] Opts tables
 
 ## Developer Experience
 - [x] Organize the codebase into manageable modules
@@ -42,5 +56,6 @@ desired tab
 ## Edge Cases
 - [] What happens when the last buffer/window/tab is closed?
 - [] Query which tab to use on opening a new buffer?
+- [] Handling instances when no ASCII key is available to assign a buffer
 
 
