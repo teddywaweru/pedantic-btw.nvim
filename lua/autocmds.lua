@@ -1,5 +1,6 @@
 local M = {}
 -- local special_keys = { "j", "k", "q", "d" }
+
 ---@param config Config
 function M.add_autocmds(config)
 	vim.api.nvim_create_augroup("PBTWAddingBuffer", { clear = true })
@@ -14,8 +15,15 @@ function M.add_autocmds(config)
 			local bufferpath = vim.api.nvim_buf_get_name(vim.fn.bufnr())
 
 			-- Updates tabs list
-			if Tabs[tabnr] == nil then
+
+			if Tabs["" .. tabnr] == nil then
 				Tabs["" .. tabnr] = {}
+				Tabs["" .. tabnr]["buffers"] = {}
+				Tabs["" .. tabnr]["windows"] = {}
+			end
+			Tabs["" .. tabnr]["buffers"][#Tabs["" .. tabnr]["buffers"] + 1] = bufnr
+
+
 			--check if winnr exists in Tabs table
 			if config.track_windows == false then
 				vim.notify("Not tracking windows...")
@@ -49,7 +57,13 @@ function M.add_autocmds(config)
 				Buffers["" .. bufnr]["window"] = winnr
 				Buffers["" .. bufnr]["tab"] = tabnr
 
+				-- TODO: might fail if key is not assigned.
+				-- Tighten edge cases
 				local key = M.assign_key(buffername, bufferpath)
+				if key == nil then
+					return
+				end
+
 				Buffers["" .. bufnr]["key"] = key[1]
 				Buffers["" .. bufnr]["key_idx"] = key[2]
 			end
@@ -62,14 +76,26 @@ function M.add_autocmds(config)
 		group = "PBTWDeleteTab",
 		callback = function()
 			--on tab close, <afile> expands to tab number
-			local tab = vim.fn.expand("<afile>")
-			local tabs = vim.api.nvim_list_tabpages()
-					vim.notify("current tab " .. tab)
-			for bufnr, buf_details in pairs(Buffers) do
-				if buf_details["tab"] == tonumber(tab) then
-					Buffers["" .. bufnr]["tab"] = tabs[1]
+			local closed_tabnr = vim.fn.expand("<afile>")
+			for tabnr, _ in pairs(Tabs) do
+				-- Just place the buffers in the first available Tab
+				-- TODO: User is able to select tabs to use
+				if tonumber(tabnr) ~= tonumber(closed_tabnr) then
+					-- table.move(Tabs["" .. closed_tab]["buffers"], 1, #Tabs["" .. closed_tab]["buffers"],
+					-- #Tabs["" .. key]["buffers"] + 1,
+					-- Tabs["" .. key]["buffers"])
+					for _, buffer in pairs(Tabs["" .. closed_tabnr]["buffers"]) do
+						Tabs["" .. tabnr]["buffers"][#Tabs["" .. tabnr]["buffers"] + 1] = buffer
+
+						Buffers["" .. buffer]["tab"] = tonumber(tabnr)
+						-- Just place the Buffers in the first window of the new tab
+						-- TODO: User is able to select the windows to use
+						Buffers["" .. buffer]["window"] = Tabs["" .. tabnr]["windows"][1]
+					end
+					break
 				end
 			end
+			Tabs["" .. closed_tabnr] = nil
 		end
 
 	})
@@ -126,10 +152,20 @@ function M.add_autocmds(config)
 		group = "PBTWDeleteBuffer",
 		callback = function()
 			local filename = vim.fn.expand("<afile>")
+
+			-- If buffer does not have a filename, then it may be a temporary
+			-- use buffer, and would not have been added.
 			if filename == "" then
 				return
 			end
+
 			local bufnr = vim.fn.bufnr(filename)
+
+			-- Confirm if buffer exists
+			-- Some buffers may not have been added to the buffer list
+			if Buffers["" .. bufnr] == nil then
+				return
+			end
 
 			if #Keys > 0 then
 				for i = 0, #Keys do
@@ -145,12 +181,16 @@ function M.add_autocmds(config)
 	})
 end
 
+--Assign a key character to the file based on filename or path
+--if other characters have already been assigned to other open buffers.
 M.assign_key = function(buffername, bufferpath)
 	if #Keys == 0 then
 		local char = buffername:sub(1, 1)
 		table.insert(Keys, char)
 		return { char, 1 }
 	end
+	-- Confirm details exists for buffer opened
+	-- Handles for some windows that may be loaded temporarily
 	for idx = 1, #buffername do
 		local char = buffername:sub(idx, idx)
 
