@@ -191,16 +191,17 @@ M.assign_key = function(buffername, bufferpath)
 	end
 	-- Confirm details exists for buffer opened
 	-- Handles for some windows that may be loaded temporarily
+	-- ie. QuickFix List does not have a defined buffername or
+	-- bufferpath
+	if #buffername == 0 then
+		return
+		-- local char = M.random_key()
+		-- TODO: Handle Buffers that don't have a name?? Or should they be
+		-- disregarded and the user informed?
+	end
 	for idx = 1, #buffername do
 		local char = buffername:sub(idx, idx)
 
-		-- for special_idx = 0, #special_keys do
-		-- 		print("Trying to check key to assign")
-		-- 	if char == special_keys[special_idx] then
-		-- 		print("Assigning a Special Key?")
-		-- 	goto next_char_in_buffername
-		-- 	end
-		-- end
 
 		for key_idx = 0, #Keys do
 			if char == Keys[key_idx] then
@@ -223,7 +224,22 @@ end
 M.edit_buffer_tab = function(bufnr)
 end
 
+-- Not truly random
+-- returns the next available character that has not been assigned so far
+-- iterates through all valid ASCII characters.
+-- if fails, session has 93 buffers open..... at which returns 0 to end
+-- the key assignment process
 M.random_key = function()
+	for i = 33, 126 do
+		for key in Keys do
+			if key ~= string.char(i) then
+				return string.char(i)
+			end
+		end
+		if i == 126 then
+			return 0
+		end
+	end
 	return { "XXXXX", 3 }
 end
 
