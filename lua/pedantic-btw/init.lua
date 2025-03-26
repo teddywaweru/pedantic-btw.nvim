@@ -47,12 +47,9 @@ function M.select_buffer()
 	while true do
 		local ok, char = pcall(vim.fn.getcharstr)
 		if not ok then
-			vim.api.nvim_feedkeys(char, 'n', false)
-			break
-		end
-		if char == "" then
+			-- vim.api.nvim_feedkeys(char, 'n', false)
 			vim.api.nvim_buf_delete(0, { force = true })
-			return
+			break
 		end
 		for _, exit_key in pairs(ExitKeys) do
 			if char == exit_key then
@@ -96,7 +93,7 @@ function M.config()
 	print("Initialize config")
 end
 
-function M.store_bufferlist()
+function M.reload_bufferlist()
 
 end
 
@@ -116,6 +113,23 @@ function M.print_tabs()
 			print("" .. k .. ":" .. table.concat(v, ","))
 		end
 	end
+end
+
+-- Change values of bufferlist
+function M.edit_bufferlist(buf)
+end
+-- Change values of buf
+function M.edit_Tabs(buf)
+end
+-- Change values of buf
+function M.edit_Windows(buf)
+	-- TODO: How to get buf details from user?
+end
+
+--Check if Tabs, Windows, and Buffers details have changed
+-- Calls autocmd triggered on BufEnter
+function M.update_bufs()
+	-- Get list of buffers
 end
 
 return M

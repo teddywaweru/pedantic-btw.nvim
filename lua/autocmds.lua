@@ -3,6 +3,8 @@ local M = {}
 
 ---@param config Config
 function M.add_autocmds(config)
+	-- TODO: Autocmds: for initial start(buffers that are opened when starting ie. nvim test.txt)
+	-- Autocmd that runs continuously to check integrity of Tabs, Windows, Buffers tables
 	vim.api.nvim_create_augroup("PBTWAddingBuffer", { clear = true })
 	vim.api.nvim_create_autocmd("BufReadPost", {
 		desc = "Adds Buffer to its window list when opened for the first time",
@@ -12,7 +14,15 @@ function M.add_autocmds(config)
 			local tabnr = vim.api.nvim_get_current_tabpage()
 			local winnr = vim.api.nvim_get_current_win()
 			local buffername = vim.fn.expand("%:t")
+
+			-- Disregard buffers without names. Typically would be temp lists ie. QuickFixList, Unnamed Buffer
+			-- There is no name on this file, so why add it?
+			if buffername == "" then
+				return
+			end
+
 			local bufferpath = vim.api.nvim_buf_get_name(vim.fn.bufnr())
+
 
 			-- Updates tabs list
 
@@ -183,42 +193,46 @@ end
 
 --Assign a key character to the file based on filename or path
 --if other characters have already been assigned to other open buffers.
+---@var buffername
+---@var bufferpath
+---@return table{string, int}
 M.assign_key = function(buffername, bufferpath)
+	local char, char_idx = nil, nil
 	if #Keys == 0 then
-		local char = buffername:sub(1, 1)
+		char = buffername:sub(1, 1)
+		char_idx = 1
 		table.insert(Keys, char)
-		return { char, 1 }
-	end
-	-- Confirm details exists for buffer opened
-	-- Handles for some windows that may be loaded temporarily
-	-- ie. QuickFix List does not have a defined buffername or
-	-- bufferpath
-	if #buffername == 0 then
-		return
-		-- local char = M.random_key()
-		-- TODO: Handle Buffers that don't have a name?? Or should they be
-		-- disregarded and the user informed?
-	end
-	for idx = 1, #buffername do
-		local char = buffername:sub(idx, idx)
-
-
-		for key_idx = 0, #Keys do
-			if char == Keys[key_idx] then
-				if idx == #buffername then
-					return M.random_key()
+	else
+		for idx = 1, #buffername do
+			if idx == #buffername then
+				char, char_idx = M.key_from_bufferpath(bufferpath)
+				if #char > 1 then
+					char, char_idx = M.random_key()
+					break
 				else
 					break
 				end
-			else
-				if key_idx == #Keys then
-					table.insert(Keys, char)
-					return { char, idx }
+			end
+
+			char = buffername:sub(idx, idx)
+
+			for key_idx = 1, #Keys do
+				if char == Keys[key_idx] then
+					break
+				else
+					if key_idx == #Keys then
+						table.insert(Keys, char)
+						char_idx = idx
+						break
+					end
 				end
 			end
+			if char_idx ~= nil then
+				break
+			end
 		end
-		-- ::next_char_in_buffername::
 	end
+	return { char, char_idx }
 end
 
 M.edit_buffer_tab = function(bufnr)
@@ -229,6 +243,7 @@ end
 -- iterates through all valid ASCII characters.
 -- if fails, session has 93 buffers open..... at which returns 0 to end
 -- the key assignment process
+---@return table
 M.random_key = function()
 	for i = 33, 126 do
 		for key in Keys do
@@ -237,9 +252,19 @@ M.random_key = function()
 			end
 		end
 		if i == 126 then
-			return 0
+			print("Unable to assign a key. Failed")
+			return { "Failed", 999999 }
 		end
 	end
+	return { "XXXXX", 3 }
+end
+
+---@return table
+function M.key_from_bufferpath(bufferpath)
+	for key_idx = 0, #bufferpath do
+		print("" .. key_idx)
+	end
+	-- TODO:
 	return { "XXXXX", 3 }
 end
 
