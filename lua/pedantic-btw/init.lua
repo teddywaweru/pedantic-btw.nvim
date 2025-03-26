@@ -70,7 +70,6 @@ function M.select_buffer()
 				vim.api.nvim_set_current_tabpage(buffer_details["tab"])
 				-- vim.api.nvim_set_current_win(buffer_details["window"])
 				vim.cmd("b " .. bufnr)
-
 				return
 			else
 				if idx == buffers - 1 then
@@ -91,10 +90,6 @@ end
 
 function M.config()
 	print("Initialize config")
-end
-
-function M.reload_bufferlist()
-
 end
 
 function M.print_bufferlist()
@@ -118,9 +113,11 @@ end
 -- Change values of bufferlist
 function M.edit_bufferlist(buf)
 end
+
 -- Change values of buf
 function M.edit_Tabs(buf)
 end
+
 -- Change values of buf
 function M.edit_Windows(buf)
 	-- TODO: How to get buf details from user?

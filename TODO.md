@@ -18,6 +18,7 @@
 - [] dap.txt help file is not removed from Buffers when closed(may have to do with bufnr assignment?)
 - [] Handling No Name buffer - buffer edited when Nvim is opened initially
 - [] Opeining LspInfo tab leads to error
+- [] Potential bugs in autocmds that have not bee registered
 
 ## User Experience
 - [x] Setting up highlighting colors for texts and floating window layout
@@ -40,6 +41,7 @@
 - [x] Handling when a buffer is not on the BufferList is deleted?
 - [] Handle buffer renaming
 - [x] Handling window information for buffers
+- [] Indicate when a buffer has unsaved changes
 
 ## User Opts Table
 - [] Track Windows
