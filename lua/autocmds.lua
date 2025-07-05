@@ -3,6 +3,34 @@ local M = {}
 
 ---@param config Config
 function M.add_autocmds(config)
+	-- TODO: Autocmds: for initial start(buffers that are opened when starting ie. nvim test.txt)
+	-- Autocmd that runs continuously to check integrity of Tabs, Windows, Buffers tables
+	-- FIX: How do we handle Adding Buffers at BufEnter without calling at
+	-- each point?
+	--
+	-- vim.api.nvim_create_augroup("PBTWAddingBuffer", { clear = true })
+	-- vim.api.nvim_create_autocmd("BufEnter", {
+	-- 	group = "PBTWAddingBuffer",
+	-- 	callback = function()
+	-- 		local bufnr = vim.api.nvim_get_current_buf()
+	-- 		if vim.api.nvim_get_option_value('buflisted', { buf = bufnr }) == false then
+	-- 			return
+	-- 		end
+	-- 		if #Buffers ~= #vim.api.nvim_list_bufs() then
+	-- 			vim.notify("Unequal numbers" .. #Buffers .. " " .. #vim.api.nvim_list_bufs())
+	-- 			for k,v in pairs(vim.api.nvim_list_bufs()) do
+	-- 			-- vim.notify("Unequal numbers" .. #Buffers .. " " .. #vim.api.nvim_list_bufs())
+	-- 				-- vim.notify("Key" .. k)
+	-- 				-- vim.notify("value" .. v)
+	-- 			end
+	-- 			local buffername = vim.fn.expand("%:t")
+	-- 			local tabnr = vim.api.nvim_get_current_tabpage()
+	-- 			local winnr = vim.api.nvim_get_current_win()
+	--
+	-- 			M.add_buffer(bufnr, tabnr, winnr, buffername, config)
+	-- 		end
+	-- 	end
+	-- })
 	vim.api.nvim_create_augroup("PBTWReadingBuffer", { clear = true })
 	vim.api.nvim_create_autocmd("BufReadPost", {
 		desc = "Adds Buffer to its window list when opened for the first time",
