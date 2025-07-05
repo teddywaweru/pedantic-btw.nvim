@@ -13,12 +13,13 @@
 
 ## Bugs
 - [x] Handle closed windows and closed buffers ie. update Buffers table
-- [] Handle buffers that miss buffername and bufferpath
+- [x] Handle buffers that miss buffername and bufferpath
 - [] Assigning Random Key, and temporary name
 - [] dap.txt help file is not removed from Buffers when closed(may have to do with bufnr assignment?)
 - [] Handling No Name buffer - buffer edited when Nvim is opened initially
 - [] Opeining LspInfo tab leads to error
 - [] Potential bugs in autocmds that have not bee registered
+- [] Opening netrw clears the entire list 
 
 ## User Experience
 - [x] Setting up highlighting colors for texts and floating window layout
@@ -32,16 +33,19 @@
 - [x] List needs to automatically expand depending on count of buffers
 - [] Columned buffer list depending on tabs(and make it an optional setting)
 - [x] What to display when there are no active buffers?
-- [] Handle QuickFix List display(and any other that may exist for the same)
+- [x] Handle QuickFix List display(and any other that may exist for the same)
 - [x] Handle invalid input. Currently transfers to editor if input is not in list
 - [x] Handle empty bufferlist at start
 - [x] Modifiable exit keys for users
 - [x] How to handle Ctrl-C exit command
 - [] Adding buffers that are opened when Neovim is started ie. "nvim new_file.txt"
 - [x] Handling when a buffer is not on the BufferList is deleted?
-- [] Handle buffer renaming
+- [] Handle buffers that have been renamed, so invalid buffers are no longer listed
 - [x] Handling window information for buffers
 - [] Indicate when a buffer has unsaved changes
+- [] Add possibility of :bp and :bn for quick switching activities?
+- [] Enable searching in the bufferlist?
+- [] Enable scrolling through the bufferlist?
 
 ## User Opts Table
 - [] Track Windows
