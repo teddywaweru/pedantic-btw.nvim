@@ -15,10 +15,10 @@ M.display = function()
 	local buf_opts = { buf = buf }
 
 	vim.api.nvim_buf_set_name(buf, "BufferList #" .. buf)
-	vim.api.nvim_set_option_value(buf, 'buftype', 'nofile', buf_opts)
-	vim.api.nvim_set_option_value(buf, 'swapfile', false, buf_opts)
-	vim.api.nvim_set_option_value(buf, 'bufhidden', 'wipe', buf_opts)
-	vim.api.nvim_set_option_value(buf, 'filetype', 'nvim-bufferlist', buf_opts)
+	vim.api.nvim_set_option_value('buftype', 'nofile', buf_opts)
+	vim.api.nvim_set_option_value('swapfile', false, buf_opts)
+	vim.api.nvim_set_option_value('bufhidden', 'wipe', buf_opts)
+	vim.api.nvim_set_option_value('filetype', 'nvim-bufferlist', buf_opts)
 	vim.api.nvim_set_option_value('filetype', 'nvim-bufferlist', buf_opts)
 	vim.api.nvim_set_option_value('buflisted', false, buf_opts)
 
