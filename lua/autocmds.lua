@@ -3,80 +3,17 @@ local M = {}
 
 ---@param config Config
 function M.add_autocmds(config)
-	-- TODO: Autocmds: for initial start(buffers that are opened when starting ie. nvim test.txt)
-	-- Autocmd that runs continuously to check integrity of Tabs, Windows, Buffers tables
-	vim.api.nvim_create_augroup("PBTWAddingBuffer", { clear = true })
+	vim.api.nvim_create_augroup("PBTWReadingBuffer", { clear = true })
 	vim.api.nvim_create_autocmd("BufReadPost", {
 		desc = "Adds Buffer to its window list when opened for the first time",
-		group = "PBTWAddingBuffer",
+		group = "PBTWReadingBuffer",
 		callback = function()
 			local bufnr = vim.api.nvim_get_current_buf()
 			local tabnr = vim.api.nvim_get_current_tabpage()
 			local winnr = vim.api.nvim_get_current_win()
 			local buffername = vim.fn.expand("%:t")
 
-			-- Disregard buffers without names. Typically would be temp lists ie. QuickFixList, Unnamed Buffer
-			-- There is no name on this file, so why add it?
-			if buffername == "" then
-				return
-			end
-
-			local bufferpath = vim.api.nvim_buf_get_name(vim.fn.bufnr())
-
-
-			-- Updates tabs list
-
-			if Tabs["" .. tabnr] == nil then
-				Tabs["" .. tabnr] = {}
-				Tabs["" .. tabnr]["buffers"] = {}
-				Tabs["" .. tabnr]["windows"] = {}
-			end
-			Tabs["" .. tabnr]["buffers"][#Tabs["" .. tabnr]["buffers"] + 1] = bufnr
-
-
-			--check if winnr exists in Tabs table
-			if config.track_windows == false then
-				vim.notify("Not tracking windows...")
-				return
-			else
-				local win_added_to_Tabs = false
-				for _, v in pairs(Tabs["" .. tabnr]["windows"]) do
-					if v == winnr then
-						win_added_to_Tabs = true
-						break
-					end
-				end
-				if not win_added_to_Tabs then
-					Tabs["" .. tabnr]["windows"][#Tabs["" .. tabnr]["windows"] + 1] = winnr
-				end
-				-- Updates windows list
-				if Windows["" .. winnr] == nil then
-					Windows["" .. winnr] = {}
-					Windows["" .. winnr]["buffers"] = {}
-					Windows["" .. winnr]["tab"] = {}
-				end
-				Windows["" .. winnr]["buffers"] = bufnr
-				Windows["" .. winnr]["tab"] = tabnr
-			end
-
-			-- Updates buffers list
-			if Buffers["" .. bufnr] == nil then
-				Buffers["" .. bufnr] = {}
-				Buffers["" .. bufnr]["buffername"] = buffername
-				Buffers["" .. bufnr]["bufferpath"] = bufferpath
-				Buffers["" .. bufnr]["window"] = winnr
-				Buffers["" .. bufnr]["tab"] = tabnr
-
-				-- TODO: might fail if key is not assigned.
-				-- Tighten edge cases
-				local key = M.assign_key(buffername, bufferpath)
-				if key == nil then
-					return
-				end
-
-				Buffers["" .. bufnr]["key"] = key[1]
-				Buffers["" .. bufnr]["key_idx"] = key[2]
-			end
+			M.add_buffer(bufnr, tabnr, winnr, buffername, config)
 		end
 	})
 
@@ -189,6 +126,71 @@ function M.add_autocmds(config)
 			end
 		end
 	})
+end
+
+function M.add_buffer(bufnr, tabnr, winnr, buffername, config)
+	-- Disregard buffers without names. Typically would be temp lists ie. QuickFixList, Unnamed Buffer
+	-- There is no name on this file, so why add it?
+	if buffername == "" then
+		return
+	end
+
+	local bufferpath = vim.api.nvim_buf_get_name(vim.fn.bufnr())
+
+
+	-- Updates tabs list
+
+	if Tabs["" .. tabnr] == nil then
+		Tabs["" .. tabnr] = {}
+		Tabs["" .. tabnr]["buffers"] = {}
+		Tabs["" .. tabnr]["windows"] = {}
+	end
+	Tabs["" .. tabnr]["buffers"][#Tabs["" .. tabnr]["buffers"] + 1] = bufnr
+
+
+	--check if winnr exists in Tabs table
+	if config.track_windows == false then
+		vim.notify("Not tracking windows...")
+		return
+	else
+		local win_added_to_Tabs = false
+		for _, v in pairs(Tabs["" .. tabnr]["windows"]) do
+			if v == winnr then
+				win_added_to_Tabs = true
+				break
+			end
+		end
+		if not win_added_to_Tabs then
+			Tabs["" .. tabnr]["windows"][#Tabs["" .. tabnr]["windows"] + 1] = winnr
+		end
+		-- Updates windows list
+		if Windows["" .. winnr] == nil then
+			Windows["" .. winnr] = {}
+			Windows["" .. winnr]["buffers"] = {}
+			Windows["" .. winnr]["tab"] = {}
+		end
+		Windows["" .. winnr]["buffers"] = bufnr
+		Windows["" .. winnr]["tab"] = tabnr
+	end
+
+	-- Updates buffers list
+	if Buffers["" .. bufnr] == nil then
+		Buffers["" .. bufnr] = {}
+		Buffers["" .. bufnr]["buffername"] = buffername
+		Buffers["" .. bufnr]["bufferpath"] = bufferpath
+		Buffers["" .. bufnr]["window"] = winnr
+		Buffers["" .. bufnr]["tab"] = tabnr
+
+		-- TODO: might fail if key is not assigned.
+		-- Tighten edge cases
+		local key = M.assign_key(buffername, bufferpath)
+		if key == nil then
+			return
+		end
+
+		Buffers["" .. bufnr]["key"] = key[1]
+		Buffers["" .. bufnr]["key_idx"] = key[2]
+	end
 end
 
 --Assign a key character to the file based on filename or path
