@@ -17,6 +17,35 @@ function M.add_autocmds(config)
 		end
 	})
 
+	vim.api.nvim_create_augroup("PBTWInsertLeave", { clear = true })
+	vim.api.nvim_create_autocmd({ "InsertLeave", "TextChanged", "TextChangedI", "TextChangedP", "TextChangedT" }, {
+		desc = "Update the bufferlist when Leaving Insert Mode to track changed files",
+		group = "PBTWInsertLeave",
+		callback = function()
+			local bufnr = M.verify_current_file()
+
+			if bufnr == nil then
+				return
+			end
+			if Buffers["" .. bufnr] == nil then
+				return
+			end
+
+			Buffers["" .. bufnr]["modified"] = vim.api.nvim_buf_get_option(bufnr, "modified")
+		end
+	})
+
+	vim.api.nvim_create_augroup("PBTWBufWrite", { clear = true })
+	vim.api.nvim_create_autocmd("BufWrite", {
+		desc = "Update the bufferlist when buffer is saved",
+		group = "PBTWBufWrite",
+		callback = function()
+			local bufnr = M.verify_current_file()
+
+			Buffers["" .. bufnr]["modified"] = false
+		end
+	})
+
 	vim.api.nvim_create_augroup("PBTWDeleteTab", { clear = true })
 	vim.api.nvim_create_autocmd("TabClosed", {
 		desc = "Moves buffers in current tab to first tab when current tab closed",
@@ -98,15 +127,12 @@ function M.add_autocmds(config)
 		desc = "Removes Buffer from bufferlist when closed",
 		group = "PBTWDeleteBuffer",
 		callback = function()
-			local filename = vim.fn.expand("<afile>")
+			-- local bufnr = vim.fn.bufnr(filename)
+			local bufnr = M.verify_current_file()
 
-			-- If buffer does not have a filename, then it may be a temporary
-			-- use buffer, and would not have been added.
-			if filename == "" then
+			if bufnr == nil then
 				return
 			end
-
-			local bufnr = vim.fn.bufnr(filename)
 
 			-- Confirm if buffer exists
 			-- Some buffers may not have been added to the buffer list
@@ -180,6 +206,7 @@ function M.add_buffer(bufnr, tabnr, winnr, buffername, config)
 		Buffers["" .. bufnr]["bufferpath"] = bufferpath
 		Buffers["" .. bufnr]["window"] = winnr
 		Buffers["" .. bufnr]["tab"] = tabnr
+		Buffers["" .. bufnr]["modified"] = false
 
 		-- TODO: might fail if key is not assigned.
 		-- Tighten edge cases
@@ -268,6 +295,19 @@ function M.key_from_bufferpath(bufferpath)
 	end
 	-- TODO:
 	return { "XXXXX", 3 }
+end
+
+function M.verify_current_file()
+	local filename = vim.fn.expand("<afile>")
+	-- If buffer does not have a filename, then it may be a temporary
+	-- use buffer, and would not have been added.
+	if filename == "" then
+		return
+	end
+
+	local bufnr = vim.fn.bufnr(filename)
+
+	return bufnr
 end
 
 return M
