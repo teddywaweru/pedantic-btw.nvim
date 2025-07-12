@@ -20,6 +20,7 @@
 - [] Opeining LspInfo tab leads to error
 - [] Potential bugs in autocmds that have not bee registered
 - [] Opening netrw clears the entire list 
+- [] Ignore the diagnostics.txt file opened
 
 ## User Experience
 - [x] Setting up highlighting colors for texts and floating window layout
