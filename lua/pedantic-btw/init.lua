@@ -103,9 +103,22 @@ end
 function M.print_tabs()
 	-- vim.notify("Called Print Tabs" .. Tabs[1])
 	for tabnr, tab_tables in pairs(Tabs) do
-		vim.notify("Tab Number " .. tabnr)
+		print("Tab Number " .. tabnr)
 		for k, v in pairs(tab_tables) do
 			print("" .. k .. ":" .. table.concat(v, ","))
+		end
+	end
+end
+
+function M.print_windows()
+	for winnr, win_tables in pairs(Windows) do
+		print("Window Number " .. winnr)
+		for k, v in pairs(win_tables) do
+			if type(v) == "table" then
+				print("" .. k .. ":" .. table.concat(v, ","))
+			else
+				print("" .. k .. ":" .. v, ",")
+			end
 		end
 	end
 end
