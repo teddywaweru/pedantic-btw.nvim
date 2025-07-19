@@ -3,6 +3,27 @@ local M = {}
 
 ---@param config Config
 function M.add_autocmds(config)
+	vim.api.nvim_create_augroup("PBTWLspAttach", { clear = true })
+	vim.api.nvim_create_autocmd("LspAttach", {
+		desc = "Attaching on LSPs?",
+		group = "PBTWLspAttach",
+		callback = function()
+			vim.notify("Triggered on LspAttach")
+
+			local def_handler = vim.lsp.handlers["textDocument/definition"]
+
+			vim.lsp.handlers["textDocument/definition"] = function(err, result, ctx, cconfig)
+				vim.notify("Go to definition triggered")
+				if result then
+					local locations = (vim.tbl_islist(result) and result) or { result }
+					for _, loc in ipairs(locations) do
+						vim.notify("Definition URL" .. vim.uri_to_fname(loc.uri))
+					end
+				end
+				return def_handler(err, result, ctx, cconfig)
+			end
+		end
+	})
 	vim.api.nvim_create_augroup("PBTWReadingBuffer", { clear = true })
 	vim.api.nvim_create_autocmd("BufReadPost", {
 		desc = "Adds Buffer to its window list when opened for the first time",
@@ -88,22 +109,26 @@ function M.add_autocmds(config)
 					return
 				end
 
-				for _, winnr in Tabs["" .. Windows["" .. closed_winnr]["tab"]]["windows"] do
-					if winnr ~= closed_winnr then
+				for _, winnr in ipairs(Tabs["" .. Windows["" .. closed_winnr]["tab"]]["windows"]) do
+					if winnr ~= tonumber(closed_winnr) then
+						-- Get the tabnr of closed_winnr
 						-- Just move Buffers to first valid window in Tab
-						for bufnr in Windows["" .. winnr]["buffers"] do
-							Windows["" .. winnr][#Windows["" .. winnr + 1]]["buffers"] = bufnr
+						vim.notify("Winnr:  " .. winnr .. "  closed_winnr:   " .. closed_winnr)
+						vim.notify("Size of Windows   " .. #Windows["" .. winnr]["buffers"])
+						for _, bufnr in ipairs(Windows["" .. closed_winnr]["buffers"]) do
+							Windows["" .. winnr]["buffers"][#Windows["" .. winnr]["buffers"] + 1] = bufnr
 							Buffers["" .. bufnr]["window"] = winnr
 						end
 						break
 					end
 				end
 				-- FIX: What happens if closed_winnr has already been iterated?
-				for tabs_key, winnr in ipairs(Tabs["" .. Windows["" .. closed_winnr]["tab"]]["windows"]) do
-					if winnr == closed_winnr then
+				for window_idx, winnr in ipairs(Tabs["" .. Windows["" .. closed_winnr]["tab"]]["windows"]) do
+					if winnr == tonumber(closed_winnr) then
+						vim.notify("closed_winnr type " .. type(closed_winnr) .. "winnr type:  " .. type(winnr))
 						-- WARNING:  Unclear if addressing with tabs_key will lead to
 						-- empty index in table
-						Tabs["" .. Windows["" .. closed_winnr]["tab"]]["window"][tabs_key] = nil
+						Tabs["" .. Windows["" .. closed_winnr]["tab"]]["windows"][window_idx] = nil
 					end
 				end
 
@@ -152,6 +177,28 @@ function M.add_autocmds(config)
 			end
 		end
 	})
+
+	-- vim.api.nvim_create_augroup("PBTWBufEnter", { clear = true })
+	-- vim.api.nvim_create_autocmd("BufEnter", {
+	-- 	desc = "Update the bufferlist when buffer is saved",
+	-- 	group = "PBTWBufEnter",
+	-- 	callback = function()
+	-- 		local curr_bufnr = M.verify_current_file()
+	-- 		if curr_bufnr == nil then
+	-- 			return
+	-- 		end
+	-- 		for bufnr, values in pairs(Buffers) do
+	-- 				vim.notify("Iterating through Buffers. Bufnr: " .. bufnr .. "  curr:  " .. curr_bufnr)
+	-- 				vim.notify("Iterating through Tabs. Tabs: " .. values["tab"])
+	-- 			if bufnr == curr_bufnr then
+	-- 				vim.api.nvim_set_current_tabpage(values["tab"])
+	-- 				vim.cmd("b " .. curr_bufnr)
+	-- 				vim.notify("Calling BufLeave")
+	-- 				vim.notify("Bufnr:    " .. curr_bufnr)
+	-- 			end
+	-- 		end
+	-- 	end
+	-- })
 end
 
 function M.add_buffer(bufnr, tabnr, winnr, buffername, config)
@@ -195,7 +242,7 @@ function M.add_buffer(bufnr, tabnr, winnr, buffername, config)
 			Windows["" .. winnr]["buffers"] = {}
 			Windows["" .. winnr]["tab"] = {}
 		end
-		Windows["" .. winnr]["buffers"] = bufnr
+		Windows["" .. winnr]["buffers"][#Windows["" .. winnr]["buffers"] + 1] = bufnr
 		Windows["" .. winnr]["tab"] = tabnr
 	end
 
