@@ -134,11 +134,12 @@ function M.add_autocmds(config)
 					end
 				end
 				-- FIX: What happens if closed_winnr has already been iterated?
-				for tabs_key, winnr in ipairs(Tabs["" .. Windows["" .. closed_winnr]["tab"]]["windows"]) do
-					if winnr == closed_winnr then
+				for window_idx, winnr in ipairs(Tabs["" .. Windows["" .. closed_winnr]["tab"]]["windows"]) do
+					if winnr == tonumber(closed_winnr) then
+						vim.notify("closed_winnr type " .. type(closed_winnr) .. "winnr type:  " .. type(winnr))
 						-- WARNING:  Unclear if addressing with tabs_key will lead to
 						-- empty index in table
-						Tabs["" .. Windows["" .. closed_winnr]["tab"]]["window"][tabs_key] = nil
+						Tabs["" .. Windows["" .. closed_winnr]["tab"]]["windows"][window_idx] = nil
 					end
 				end
 
@@ -190,6 +191,28 @@ function M.add_autocmds(config)
 			end
 		end
 	})
+
+	-- vim.api.nvim_create_augroup("PBTWBufEnter", { clear = true })
+	-- vim.api.nvim_create_autocmd("BufEnter", {
+	-- 	desc = "Update the bufferlist when buffer is saved",
+	-- 	group = "PBTWBufEnter",
+	-- 	callback = function()
+	-- 		local curr_bufnr = M.verify_current_file()
+	-- 		if curr_bufnr == nil then
+	-- 			return
+	-- 		end
+	-- 		for bufnr, values in pairs(Buffers) do
+	-- 				vim.notify("Iterating through Buffers. Bufnr: " .. bufnr .. "  curr:  " .. curr_bufnr)
+	-- 				vim.notify("Iterating through Tabs. Tabs: " .. values["tab"])
+	-- 			if bufnr == curr_bufnr then
+	-- 				vim.api.nvim_set_current_tabpage(values["tab"])
+	-- 				vim.cmd("b " .. curr_bufnr)
+	-- 				vim.notify("Calling BufLeave")
+	-- 				vim.notify("Bufnr:    " .. curr_bufnr)
+	-- 			end
+	-- 		end
+	-- 	end
+	-- })
 end
 
 function M.add_buffer(bufnr, tabnr, winnr, buffername, config)
@@ -225,9 +248,13 @@ function M.add_buffer(bufnr, tabnr, winnr, buffername, config)
 			Tabs["" .. tabnr]["windows"][#Tabs["" .. tabnr]["windows"] + 1] = winnr
 		end
 		-- Updates windows list
-
-		M.add_window(winnr, tabnr)
+		if Windows["" .. winnr] == nil then
+			Windows["" .. winnr] = {}
+			Windows["" .. winnr]["buffers"] = {}
+			Windows["" .. winnr]["tab"] = {}
+		end
 		Windows["" .. winnr]["buffers"][#Windows["" .. winnr]["buffers"] + 1] = bufnr
+		Windows["" .. winnr]["tab"] = tabnr
 	end
 
 	-- Updates buffers list
