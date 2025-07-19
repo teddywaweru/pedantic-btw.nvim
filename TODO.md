@@ -20,7 +20,10 @@
 - [] Opeining LspInfo tab leads to error
 - [] Potential bugs in autocmds that have not bee registered
 - [] Opening netrw clears the entire list 
-- [] Ignore the diagnostics.txt file opened
+- [] Ignore the diagnostics.txt file opened - error when the diagnostics is closed: BufLeave autocmd issue
+- [] go-to definition opens the file in current window instead of opened buffer location
+- [] Error when Tab is closed
+- [] Add TabNew WinNew autocmd
 
 ## User Experience
 - [x] Setting up highlighting colors for texts and floating window layout
