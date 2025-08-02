@@ -20,6 +20,10 @@
 - [] Opeining LspInfo tab leads to error
 - [] Potential bugs in autocmds that have not bee registered
 - [] Opening netrw clears the entire list 
+- [] Ignore the diagnostics.txt file opened - error when the diagnostics is closed: BufLeave autocmd issue
+- [] go-to definition opens the file in current window instead of opened buffer location
+- [] Error when Tab is closed
+- [] Add TabNew WinNew autocmd
 
 ## User Experience
 - [x] Setting up highlighting colors for texts and floating window layout
@@ -42,10 +46,12 @@
 - [x] Handling when a buffer is not on the BufferList is deleted?
 - [] Handle buffers that have been renamed, so invalid buffers are no longer listed
 - [x] Handling window information for buffers
-- [] Indicate when a buffer has unsaved changes
+- [x] Indicate when a buffer has unsaved changes
 - [] Add possibility of :bp and :bn for quick switching activities?
 - [] Enable searching in the bufferlist?
 - [] Enable scrolling through the bufferlist?
+- [] Show a help menu for special keys(or to enable buffer position editing mode)
+
 
 ## User Opts Table
 - [] Track Windows

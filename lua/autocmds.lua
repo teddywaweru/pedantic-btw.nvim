@@ -3,31 +3,22 @@ local M = {}
 
 ---@param config Config
 function M.add_autocmds(config)
-	-- TODO: Autocmds: for initial start(buffers that are opened when starting ie. nvim test.txt)
-	-- Autocmd that runs continuously to check integrity of Tabs, Windows, Buffers tables
-	-- FIX: How do we handle Adding Buffers at BufEnter without calling at
-	-- each point?
-	--
-	-- vim.api.nvim_create_augroup("PBTWAddingBuffer", { clear = true })
-	-- vim.api.nvim_create_autocmd("BufEnter", {
-	-- 	group = "PBTWAddingBuffer",
+	vim.api.nvim_create_augroup("PBTWLspAttach", { clear = true })
+	-- vim.api.nvim_create_autocmd("LspAttach", {
+	-- 	desc = "Attaching on LSPs?",
+	-- 	group = "PBTWLspAttach",
 	-- 	callback = function()
-	-- 		local bufnr = vim.api.nvim_get_current_buf()
-	-- 		if vim.api.nvim_get_option_value('buflisted', { buf = bufnr }) == false then
-	-- 			return
-	-- 		end
-	-- 		if #Buffers ~= #vim.api.nvim_list_bufs() then
-	-- 			vim.notify("Unequal numbers" .. #Buffers .. " " .. #vim.api.nvim_list_bufs())
-	-- 			for k,v in pairs(vim.api.nvim_list_bufs()) do
-	-- 			-- vim.notify("Unequal numbers" .. #Buffers .. " " .. #vim.api.nvim_list_bufs())
-	-- 				-- vim.notify("Key" .. k)
-	-- 				-- vim.notify("value" .. v)
-	-- 			end
-	-- 			local buffername = vim.fn.expand("%:t")
-	-- 			local tabnr = vim.api.nvim_get_current_tabpage()
-	-- 			local winnr = vim.api.nvim_get_current_win()
 	--
-	-- 			M.add_buffer(bufnr, tabnr, winnr, buffername, config)
+	-- 		local def_handler = vim.lsp.handlers["textDocument/definition"]
+	--
+	-- 		vim.lsp.handlers["textDocument/definition"] = function(err, result, ctx, cconfig)
+	-- 			if result then
+	-- 				local locations = (vim.tbl_islist(result) and result) or { result }
+	-- 				for _, loc in ipairs(locations) do
+	-- 					vim.notify("Definition URL" .. vim.uri_to_fname(loc.uri))
+	-- 				end
+	-- 			end
+	-- 			return def_handler(err, result, ctx, cconfig)
 	-- 		end
 	-- 	end
 	-- })
@@ -53,7 +44,6 @@ function M.add_autocmds(config)
 			local tabnr = vim.api.nvim_get_current_tabpage()
 
 			M.add_tab(tabnr)
-
 		end
 	})
 
@@ -86,7 +76,8 @@ function M.add_autocmds(config)
 					-- table.move(Tabs["" .. closed_tab]["buffers"], 1, #Tabs["" .. closed_tab]["buffers"],
 					-- #Tabs["" .. key]["buffers"] + 1,
 					-- Tabs["" .. key]["buffers"])
-					for _, buffer in pairs(Tabs["" .. closed_tabnr]["buffers"]) do
+					vim.notify("closed_tabnr " .. closed_tabnr .. "tabnr  " .. tabnr)
+					for _, buffer in ipairs(Tabs["" .. closed_tabnr]["buffers"]) do
 						Tabs["" .. tabnr]["buffers"][#Tabs["" .. tabnr]["buffers"] + 1] = buffer
 
 						Buffers["" .. buffer]["tab"] = tonumber(tabnr)
@@ -110,14 +101,24 @@ function M.add_autocmds(config)
 				local closed_winnr = vim.fn.expand("<afile>")
 				-- Temporary Windows are not added to the BTW tables,
 				-- ie. Telescope Browsing Windows
+
+				-- HACK: Check if Tabs have been opened in the application.
+				-- Issue noted when LazyGit(a window) is opened when no buffer is open
+				local count = 0
+				for _ in pairs(Tabs) do
+					count = count + 1
+				end
+				if count == 0 then
+					return
+				end
 				if Windows["" .. closed_winnr] == nil then
 					return
 				end
 
-				for _, winnr in ipairs(Tabs["" .. Windows["" .. closed_winnr]["tab"]]["windows"] )do
+				for _, winnr in ipairs(Tabs["" .. Windows["" .. closed_winnr]["tab"]]["windows"]) do
 					if winnr ~= tonumber(closed_winnr) then
 						-- Just move Buffers to first valid window in Tab
-						for _, bufnr in ipairs(Windows["" .. closed_winnr]["buffers"])do
+						for _, bufnr in ipairs(Windows["" .. closed_winnr]["buffers"]) do
 							Windows["" .. winnr]["buffers"][#Windows["" .. winnr]["buffers"] + 1] = bufnr
 							Buffers["" .. bufnr]["window"] = winnr
 						end
@@ -125,11 +126,11 @@ function M.add_autocmds(config)
 					end
 				end
 				-- FIX: What happens if closed_winnr has already been iterated?
-				for tabs_key, winnr in ipairs(Tabs["" .. Windows["" .. closed_winnr]["tab"]]["windows"]) do
-					if winnr == closed_winnr then
+				for window_idx, winnr in ipairs(Tabs["" .. Windows["" .. closed_winnr]["tab"]]["windows"]) do
+					if winnr == tonumber(closed_winnr) then
 						-- WARNING:  Unclear if addressing with tabs_key will lead to
 						-- empty index in table
-						Tabs["" .. Windows["" .. closed_winnr]["tab"]]["window"][tabs_key] = nil
+						Tabs["" .. Windows["" .. closed_winnr]["tab"]]["windows"][window_idx] = nil
 					end
 				end
 
@@ -181,6 +182,28 @@ function M.add_autocmds(config)
 			end
 		end
 	})
+
+	-- vim.api.nvim_create_augroup("PBTWBufEnter", { clear = true })
+	-- vim.api.nvim_create_autocmd("BufEnter", {
+	-- 	desc = "Update the bufferlist when buffer is saved",
+	-- 	group = "PBTWBufEnter",
+	-- 	callback = function()
+	-- 		local curr_bufnr = M.verify_current_file()
+	-- 		if curr_bufnr == nil then
+	-- 			return
+	-- 		end
+	-- 		for bufnr, values in pairs(Buffers) do
+	-- 				vim.notify("Iterating through Buffers. Bufnr: " .. bufnr .. "  curr:  " .. curr_bufnr)
+	-- 				vim.notify("Iterating through Tabs. Tabs: " .. values["tab"])
+	-- 			if bufnr == curr_bufnr then
+	-- 				vim.api.nvim_set_current_tabpage(values["tab"])
+	-- 				vim.cmd("b " .. curr_bufnr)
+	-- 				vim.notify("Calling BufLeave")
+	-- 				vim.notify("Bufnr:    " .. curr_bufnr)
+	-- 			end
+	-- 		end
+	-- 	end
+	-- })
 end
 
 function M.add_buffer(bufnr, tabnr, winnr, buffername, config)
@@ -195,7 +218,7 @@ function M.add_buffer(bufnr, tabnr, winnr, buffername, config)
 
 	-- Updates tabs list
 
-		M.add_tab(tabnr)
+	M.add_tab(tabnr)
 
 	Tabs["" .. tabnr]["buffers"][#Tabs["" .. tabnr]["buffers"] + 1] = bufnr
 
@@ -216,9 +239,13 @@ function M.add_buffer(bufnr, tabnr, winnr, buffername, config)
 			Tabs["" .. tabnr]["windows"][#Tabs["" .. tabnr]["windows"] + 1] = winnr
 		end
 		-- Updates windows list
-
-			M.add_window(winnr, tabnr)
+		if Windows["" .. winnr] == nil then
+			Windows["" .. winnr] = {}
+			Windows["" .. winnr]["buffers"] = {}
+			Windows["" .. winnr]["tab"] = {}
+		end
 		Windows["" .. winnr]["buffers"][#Windows["" .. winnr]["buffers"] + 1] = bufnr
+		Windows["" .. winnr]["tab"] = tabnr
 	end
 
 	-- Updates buffers list
