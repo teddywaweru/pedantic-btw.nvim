@@ -46,7 +46,7 @@
 - [x] Handling when a buffer is not on the BufferList is deleted?
 - [] Handle buffers that have been renamed, so invalid buffers are no longer listed
 - [x] Handling window information for buffers
-- [] Indicate when a buffer has unsaved changes
+- [x] Indicate when a buffer has unsaved changes
 - [] Add possibility of :bp and :bn for quick switching activities?
 - [] Enable searching in the bufferlist?
 - [] Enable scrolling through the bufferlist?
