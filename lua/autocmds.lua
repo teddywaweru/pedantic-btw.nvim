@@ -45,6 +45,30 @@ function M.add_autocmds(config)
 		end
 	})
 
+	vim.api.nvim_create_augroup("PBTWTabNew", { clear = true })
+	vim.api.nvim_create_autocmd("TabNew", {
+		desc = "Adds Buffer to its window list when opened for the first time",
+		group = "PBTWTabNew",
+		callback = function()
+			local tabnr = vim.api.nvim_get_current_tabpage()
+
+			M.add_tab(tabnr)
+
+		end
+	})
+
+	vim.api.nvim_create_augroup("PBTWWinNew", { clear = true })
+	vim.api.nvim_create_autocmd("WinNew", {
+		desc = "Adds Buffer to its window list when opened for the first time",
+		group = "PBTWWinNew",
+		callback = function()
+			local winnr = vim.api.nvim_get_current_win()
+			local tabnr = vim.api.nvim_get_current_tabpage()
+
+			M.add_window(winnr, tabnr)
+		end
+	})
+
 	vim.api.nvim_create_augroup("PBTWDeleteTab", { clear = true })
 	vim.api.nvim_create_autocmd("TabClosed", {
 		desc = "Moves buffers in current tab to first tab when current tab closed",
@@ -52,6 +76,9 @@ function M.add_autocmds(config)
 		callback = function()
 			--on tab close, <afile> expands to tab number
 			local closed_tabnr = vim.fn.expand("<afile>")
+			if Tabs["" .. closed_tabnr] == nil then
+				return
+			end
 			for tabnr, _ in pairs(Tabs) do
 				-- Just place the buffers in the first available Tab
 				-- TODO: User is able to select tabs to use
@@ -87,11 +114,11 @@ function M.add_autocmds(config)
 					return
 				end
 
-				for _, winnr in Tabs["" .. Windows["" .. closed_winnr]["tab"]]["windows"] do
-					if winnr ~= closed_winnr then
+				for _, winnr in ipairs(Tabs["" .. Windows["" .. closed_winnr]["tab"]]["windows"] )do
+					if winnr ~= tonumber(closed_winnr) then
 						-- Just move Buffers to first valid window in Tab
-						for bufnr in Windows["" .. winnr]["buffers"] do
-							Windows["" .. winnr][#Windows["" .. winnr + 1]]["buffers"] = bufnr
+						for _, bufnr in ipairs(Windows["" .. closed_winnr]["buffers"])do
+							Windows["" .. winnr]["buffers"][#Windows["" .. winnr]["buffers"] + 1] = bufnr
 							Buffers["" .. bufnr]["window"] = winnr
 						end
 						break
@@ -168,11 +195,8 @@ function M.add_buffer(bufnr, tabnr, winnr, buffername, config)
 
 	-- Updates tabs list
 
-	if Tabs["" .. tabnr] == nil then
-		Tabs["" .. tabnr] = {}
-		Tabs["" .. tabnr]["buffers"] = {}
-		Tabs["" .. tabnr]["windows"] = {}
-	end
+		M.add_tab(tabnr)
+
 	Tabs["" .. tabnr]["buffers"][#Tabs["" .. tabnr]["buffers"] + 1] = bufnr
 
 
@@ -192,13 +216,9 @@ function M.add_buffer(bufnr, tabnr, winnr, buffername, config)
 			Tabs["" .. tabnr]["windows"][#Tabs["" .. tabnr]["windows"] + 1] = winnr
 		end
 		-- Updates windows list
-		if Windows["" .. winnr] == nil then
-			Windows["" .. winnr] = {}
-			Windows["" .. winnr]["buffers"] = {}
-			Windows["" .. winnr]["tab"] = {}
-		end
-		Windows["" .. winnr]["buffers"] = bufnr
-		Windows["" .. winnr]["tab"] = tabnr
+
+			M.add_window(winnr, tabnr)
+		Windows["" .. winnr]["buffers"][#Windows["" .. winnr]["buffers"] + 1] = bufnr
 	end
 
 	-- Updates buffers list
@@ -226,7 +246,7 @@ end
 ---@var buffername
 ---@var bufferpath
 ---@return table{string, int}
-M.assign_key = function(buffername, bufferpath)
+function M.assign_key(buffername, bufferpath)
 	local char, char_idx = nil, nil
 	if #Keys == 0 then
 		char = buffername:sub(1, 1)
@@ -263,6 +283,22 @@ M.assign_key = function(buffername, bufferpath)
 		end
 	end
 	return { char, char_idx }
+end
+
+function M.add_tab(tabnr)
+	if Tabs["" .. tabnr] == nil then
+		Tabs["" .. tabnr] = {}
+		Tabs["" .. tabnr]["buffers"] = {}
+		Tabs["" .. tabnr]["windows"] = {}
+	end
+end
+
+function M.add_window(winnr, tabnr)
+	if Windows["" .. winnr] == nil then
+		Windows["" .. winnr] = {}
+		Windows["" .. winnr]["buffers"] = {}
+		Windows["" .. winnr]["tab"] = tabnr
+	end
 end
 
 M.edit_buffer_tab = function(bufnr)
