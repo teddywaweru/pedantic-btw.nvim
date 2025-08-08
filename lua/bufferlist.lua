@@ -33,8 +33,7 @@ function M.display()
 	vim.api.nvim_set_hl(0, "PBTWStylizeModified",
 		{ bg = '#000000', fg = '#af8000', italic = true, ctermfg = 198, cterm = { bold = true }, default = true });
 
-	local buffer_details = {}
-	local buffer_count = 0
+	local buffer_content = {}
 	local max_chars = 0
 	for bufnr, values in pairs(Buffers) do
 		local detail = "" .. values["buffername"]
@@ -45,30 +44,31 @@ function M.display()
 
 		detail = detail .. "       " .. bufnr
 
-		table.insert(buffer_details, detail)
+		table.insert(buffer_content, detail)
 
 		if string.len(detail) > max_chars then
 			max_chars = string.len(detail)
 		end
 
 		local filepath = "" .. values["bufferpath"] .. ""
-		table.insert(buffer_details, filepath)
+		table.insert(buffer_content, filepath)
 
 		if string.len(filepath) > max_chars then
 			max_chars = string.len(filepath)
 		end
 
-		table.insert(buffer_details, "")
+		table.insert(buffer_content, "")
 
-		vim.api.nvim_buf_set_lines(buf, 0, -1, false, buffer_details)
-
-		buffer_count = buffer_count + 1
 	end
+
+	table.insert(buffer_content, "Special Keys:: ?,-,_,q,Esc,C-c,C-[")
+	vim.api.nvim_buf_set_lines(buf, 0, -1, false, buffer_content)
+
 	vim.api.nvim_buf_set_option(buf, 'modifiable', false)
 
 	local ui = vim.api.nvim_list_uis()[1]
 	local width = max_chars + 2
-	local height = buffer_count * 3
+	local height = #buffer_content
 	local win_opts = {
 		relative = "editor",
 		width = width,

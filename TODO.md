@@ -50,6 +50,8 @@
 - [] Add possibility of :bp and :bn for quick switching activities?
 - [] Enable searching in the bufferlist?
 - [] Enable scrolling through the bufferlist?
+- [] Show a help menu for special keys(or to enable buffer position editing mode)
+
 
 ## User Opts Table
 - [] Track Windows
