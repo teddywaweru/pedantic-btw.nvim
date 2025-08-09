@@ -22,6 +22,35 @@ function M.add_autocmds(config)
 	-- 		end
 	-- 	end
 	-- })
+	vim.api.nvim_create_augroup("PBTWInsertLeave", { clear = true })
+	vim.api.nvim_create_autocmd({ "InsertLeave", "TextChanged", "TextChangedI", "TextChangedP", "TextChangedT" }, {
+		desc = "Update the bufferlist when Leaving Insert Mode to track changed files",
+		group = "PBTWInsertLeave",
+		callback = function()
+			local bufnr = M.verify_current_file()
+
+			if bufnr == nil then
+				return
+			end
+			if Buffers["" .. bufnr] == nil then
+				return
+			end
+
+			Buffers["" .. bufnr]["modified"] = vim.api.nvim_buf_get_option(bufnr, "modified")
+		end
+	})
+
+	vim.api.nvim_create_augroup("PBTWBufWrite", { clear = true })
+	vim.api.nvim_create_autocmd("BufWrite", {
+		desc = "Update the bufferlist when buffer is saved",
+		group = "PBTWBufWrite",
+		callback = function()
+			local bufnr = M.verify_current_file()
+
+			Buffers["" .. bufnr]["modified"] = false
+		end
+	})
+
 	vim.api.nvim_create_augroup("PBTWReadingBuffer", { clear = true })
 	vim.api.nvim_create_autocmd("BufReadPost", {
 		desc = "Adds Buffer to its window list when opened for the first time",
@@ -323,6 +352,18 @@ function M.add_window(winnr, tabnr)
 		Windows["" .. winnr]["buffers"] = {}
 		Windows["" .. winnr]["tab"] = tabnr
 	end
+end
+function M.verify_current_file()
+	local filename = vim.fn.expand("<afile>")
+	-- If buffer does not have a filename, then it may be a temporary
+	-- use buffer, and would not have been added.
+	if filename == "" then
+		return
+	end
+
+	local bufnr = vim.fn.bufnr(filename)
+
+	return bufnr
 end
 
 M.edit_buffer_tab = function(bufnr)
