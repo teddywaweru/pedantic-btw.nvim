@@ -53,7 +53,6 @@ function M.add_autocmds(config)
 			local tabnr = vim.api.nvim_get_current_tabpage()
 
 			M.add_tab(tabnr)
-
 		end
 	})
 
@@ -110,14 +109,24 @@ function M.add_autocmds(config)
 				local closed_winnr = vim.fn.expand("<afile>")
 				-- Temporary Windows are not added to the BTW tables,
 				-- ie. Telescope Browsing Windows
+
+				-- HACK: Check if Tabs have been opened in the application.
+				-- Issue noted when LazyGit(a window) is opened when no buffer is open
+				local count = 0
+				for _ in pairs(Tabs) do
+					count = count + 1
+				end
+				if count == 0 then
+					return
+				end
 				if Windows["" .. closed_winnr] == nil then
 					return
 				end
 
-				for _, winnr in ipairs(Tabs["" .. Windows["" .. closed_winnr]["tab"]]["windows"] )do
+				for _, winnr in ipairs(Tabs["" .. Windows["" .. closed_winnr]["tab"]]["windows"]) do
 					if winnr ~= tonumber(closed_winnr) then
 						-- Just move Buffers to first valid window in Tab
-						for _, bufnr in ipairs(Windows["" .. closed_winnr]["buffers"])do
+						for _, bufnr in ipairs(Windows["" .. closed_winnr]["buffers"]) do
 							Windows["" .. winnr]["buffers"][#Windows["" .. winnr]["buffers"] + 1] = bufnr
 							Buffers["" .. bufnr]["window"] = winnr
 						end
@@ -195,7 +204,7 @@ function M.add_buffer(bufnr, tabnr, winnr, buffername, config)
 
 	-- Updates tabs list
 
-		M.add_tab(tabnr)
+	M.add_tab(tabnr)
 
 	Tabs["" .. tabnr]["buffers"][#Tabs["" .. tabnr]["buffers"] + 1] = bufnr
 
@@ -217,7 +226,7 @@ function M.add_buffer(bufnr, tabnr, winnr, buffername, config)
 		end
 		-- Updates windows list
 
-			M.add_window(winnr, tabnr)
+		M.add_window(winnr, tabnr)
 		Windows["" .. winnr]["buffers"][#Windows["" .. winnr]["buffers"] + 1] = bufnr
 	end
 
