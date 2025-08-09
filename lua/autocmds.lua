@@ -239,11 +239,8 @@ function M.add_buffer(bufnr, tabnr, winnr, buffername, config)
 			Tabs["" .. tabnr]["windows"][#Tabs["" .. tabnr]["windows"] + 1] = winnr
 		end
 		-- Updates windows list
-		if Windows["" .. winnr] == nil then
-			Windows["" .. winnr] = {}
-			Windows["" .. winnr]["buffers"] = {}
-			Windows["" .. winnr]["tab"] = {}
-		end
+
+		M.add_window(winnr, tabnr)
 		Windows["" .. winnr]["buffers"][#Windows["" .. winnr]["buffers"] + 1] = bufnr
 		Windows["" .. winnr]["tab"] = tabnr
 	end
