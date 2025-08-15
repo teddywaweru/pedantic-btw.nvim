@@ -24,6 +24,9 @@
 - [] go-to definition opens the file in current window instead of opened buffer location
 - [] Error when Tab is closed
 - [] Add TabNew WinNew autocmd
+- [] Buffer is still listed after being deleted when using vifm.vim
+- [] Handle buffers that are not loaded during a session?
+- [] 
 
 ## User Experience
 - [x] Setting up highlighting colors for texts and floating window layout
@@ -51,6 +54,8 @@
 - [] Enable searching in the bufferlist?
 - [] Enable scrolling through the bufferlist?
 - [] Show a help menu for special keys(or to enable buffer position editing mode)
+- [] Reloading the BTW tables?
+- [] Handling new entry validations?
 
 
 ## User Opts Table

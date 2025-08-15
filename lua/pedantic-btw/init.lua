@@ -67,6 +67,7 @@ function M.select_buffer()
 		for bufnr, buffer_details in pairs(Buffers) do
 			if char == buffer_details["key"] then
 				vim.api.nvim_buf_delete(0, { force = true })
+				vim.notify("Tab page selected: " .. buffer_details["tab"])
 				vim.api.nvim_set_current_tabpage(buffer_details["tab"])
 				vim.api.nvim_set_current_win(buffer_details["window"])
 				vim.cmd("b " .. bufnr)
@@ -90,6 +91,34 @@ end
 
 function M.config()
 	print("Initialize config")
+end
+
+-- Using the resession.nvim plugin to save buffer details to use when session is restored
+-- Resession.nvim does not maintain bufnr, winnr or tabnr upon restart
+-- Tabnr are reset from one depending on their order when nvim was saved.
+-- Winnr are reset starting arbitrarily, same for bufnrs.
+-- HACK: We use the tabnr increments to save buffers per their tabs,
+-- Windows are assigned arbitrarily, only tabs are maintained.
+-- Involves a lot of cleaning the tables so that errors are prevented during resessions
+function M.save_btws()
+	-- Handle Changes in Tabs
+	local new_tabnr = 1
+	local store_tabs = {}
+	local store_buffers = Buffers
+	for _, tab in pairs(Tabs) do
+		-- Update the tabnr in Buffers
+		for _, bufnr in pairs(tab["buffers"]) do
+			store_buffers["" .. bufnr]["tab"] = new_tabnr
+		end
+		-- tab["buffers"] = nil
+		store_tabs["" .. new_tabnr] = tab
+		store_tabs["" .. new_tabnr]["buffers"] = nil
+
+		-- vim.notify("Here is the current tabnr: " .. tabnr)
+		new_tabnr = new_tabnr + 1
+	end
+
+	return { Buffers = store_buffers, Windows = Windows, Tabs = store_tabs }
 end
 
 function M.print_bufferlist()
@@ -140,6 +169,64 @@ end
 -- Calls autocmd triggered on BufEnter
 function M.update_bufs()
 	-- Get list of buffers
+end
+
+function M.load_session(data)
+	local tabs = data["Tabs"]
+	local buffers = {}
+	local windows = {}
+	for tabnr, tab_details in pairs(tabs) do
+		tab_details["buffers"] = {}
+		vim.notify("Here is the current tabnr: " .. tabnr)
+		local winnrs = vim.api.nvim_tabpage_list_wins(tonumber(tabnr))
+		tab_details["windows"] = winnrs
+
+		for _, winnr in ipairs(winnrs) do
+			windows["" .. winnr] = {}
+			windows["" .. winnr]["tab"] = tabnr
+		end
+	end
+
+	local bufnrs = vim.api.nvim_list_bufs()
+	for _, bufnr in ipairs(bufnrs) do
+		local bufferpath = vim.api.nvim_buf_get_name(bufnr)
+		for _, store_buffer_details in pairs(data["Buffers"]) do
+			if bufferpath == store_buffer_details["bufferpath"] then
+				buffers["" .. bufnr] = {}
+				buffers["" .. bufnr]["buffername"] = store_buffer_details["buffername"]
+				buffers["" .. bufnr]["bufferpath"] = bufferpath
+
+				-- HACK: Just dump all buffers in the first window of their tab
+				local winnr = tabs["" .. store_buffer_details["tab"]]["windows"][1]
+				local tabnr = store_buffer_details["tab"]
+				buffers["" .. bufnr]["window"] = winnr
+
+				-- Update windows, windows["buffers"] here
+				if windows["" .. winnr]["buffers"] == nil then
+					windows["" .. winnr]["buffers"] = {}
+				end
+				windows["" .. winnr]["buffers"][#windows["" .. winnr]["buffers"] + 1] = bufnr
+				windows["" .. winnr]["tab"] = tabnr
+
+				-- Update tabs["buffers"] here
+				tabs["" .. tabnr]["buffers"][#tabs["" .. tabnr]["buffers"] + 1] = bufnr
+
+				buffers["" .. bufnr]["tab"] = store_buffer_details["tab"]
+				buffers["" .. bufnr]["key"] = store_buffer_details["key"]
+				buffers["" .. bufnr]["key_idx"] = store_buffer_details["key_idx"]
+			end
+		end
+	end
+
+	Tabs = tabs
+	Buffers = buffers
+	Windows = windows
+end
+
+function M.clear_data()
+	Buffers = {}
+	Windows = {}
+	Tabs = {}
 end
 
 return M

@@ -10,6 +10,10 @@ function M.add_autocmds(config)
 	-- 	callback = function()
 	--
 	-- 		local def_handler = vim.lsp.handlers["textDocument/definition"]
+	-- TODO: Autocmds: for initial start(buffers that are opened when starting ie. nvim test.txt)
+	-- Autocmd that runs continuously to check integrity of Tabs, Windows, Buffers tables
+	-- FIX: How do we handle Adding Buffers at BufEnter without calling at
+	-- each point?
 	--
 	-- 		vim.lsp.handlers["textDocument/definition"] = function(err, result, ctx, cconfig)
 	-- 			if result then
@@ -17,8 +21,27 @@ function M.add_autocmds(config)
 	-- 				for _, loc in ipairs(locations) do
 	-- 					vim.notify("Definition URL" .. vim.uri_to_fname(loc.uri))
 	-- 				end
+	-- vim.api.nvim_create_augroup("PBTWAddingBuffer", { clear = true })
+	-- vim.api.nvim_create_autocmd("BufEnter", {
+	-- 	group = "PBTWAddingBuffer",
+	-- 	callback = function()
+	-- 		local bufnr = vim.api.nvim_get_current_buf()
+	-- 		if vim.api.nvim_get_option_value('buflisted', { buf = bufnr }) == false then
+	-- 			return
+	-- 		end
+	-- 		if #Buffers ~= #vim.api.nvim_list_bufs() then
+	-- 			vim.notify("Unequal numbers" .. #Buffers .. " " .. #vim.api.nvim_list_bufs())
+	-- 			for k,v in pairs(vim.api.nvim_list_bufs()) do
+	-- 			-- vim.notify("Unequal numbers" .. #Buffers .. " " .. #vim.api.nvim_list_bufs())
+	-- 				-- vim.notify("Key" .. k)
+	-- 				-- vim.notify("value" .. v)
 	-- 			end
 	-- 			return def_handler(err, result, ctx, cconfig)
+	-- 			local buffername = vim.fn.expand("%:t")
+	-- 			local tabnr = vim.api.nvim_get_current_tabpage()
+	-- 			local winnr = vim.api.nvim_get_current_win()
+	--
+	-- 			M.add_buffer(bufnr, tabnr, winnr, buffername, config)
 	-- 		end
 	-- 	end
 	-- })
@@ -105,8 +128,7 @@ function M.add_autocmds(config)
 					-- table.move(Tabs["" .. closed_tab]["buffers"], 1, #Tabs["" .. closed_tab]["buffers"],
 					-- #Tabs["" .. key]["buffers"] + 1,
 					-- Tabs["" .. key]["buffers"])
-					vim.notify("closed_tabnr " .. closed_tabnr .. "tabnr  " .. tabnr)
-					for _, buffer in ipairs(Tabs["" .. closed_tabnr]["buffers"]) do
+					for _, buffer in pairs(Tabs["" .. closed_tabnr]["buffers"]) do
 						Tabs["" .. tabnr]["buffers"][#Tabs["" .. tabnr]["buffers"] + 1] = buffer
 
 						Buffers["" .. buffer]["tab"] = tonumber(tabnr)
@@ -128,6 +150,7 @@ function M.add_autocmds(config)
 			group = "PBTWDeleteWindow",
 			callback = function()
 				local closed_winnr = vim.fn.expand("<afile>")
+				-- vim.notify("Closed_winnr: " .. closed_winnr)
 				-- Temporary Windows are not added to the BTW tables,
 				-- ie. Telescope Browsing Windows
 
@@ -141,6 +164,7 @@ function M.add_autocmds(config)
 					return
 				end
 				if Windows["" .. closed_winnr] == nil then
+					print("Not triggered?")
 					return
 				end
 
@@ -157,24 +181,28 @@ function M.add_autocmds(config)
 				-- FIX: What happens if closed_winnr has already been iterated?
 				for window_idx, winnr in ipairs(Tabs["" .. Windows["" .. closed_winnr]["tab"]]["windows"]) do
 					if winnr == tonumber(closed_winnr) then
-						-- WARNING:  Unclear if addressing with tabs_key will lead to
-						-- empty index in table
-						Tabs["" .. Windows["" .. closed_winnr]["tab"]]["windows"][window_idx] = nil
+						for tabs_key, winnr in ipairs(Tabs["" .. Windows["" .. closed_winnr]["tab"]]["windows"]) do
+							if winnr == closed_winnr then
+								-- WARNING:  Unclear if addressing with tabs_key will lead to
+								-- empty index in table
+								Tabs["" .. Windows["" .. closed_winnr]["tab"]]["window"][tabs_key] = nil
+							end
+						end
 					end
+
+					Windows["" .. closed_winnr] = nil
+
+					-- TODO: Delete winnr in Tabs table
+					-- Buffers
+					-- Update winnr
+					-- Windows
+					-- move buffers to new winnr
+					-- Tabs[""..Windows["" ..closed_winr]["tab"]]
+					-- Handle deletions from Buffers, Windows and Tabs tables
+					-- for buffer in reassign_bufs do
+					-- Change  data in Windows
+					-- end
 				end
-
-				Windows["" .. closed_winnr] = nil
-
-				-- TODO: Delete winnr in Tabs table
-				-- Buffers
-				-- Update winnr
-				-- Windows
-				-- move buffers to new winnr
-				-- Tabs[""..Windows["" ..closed_winr]["tab"]]
-				-- Handle deletions from Buffers, Windows and Tabs tables
-				-- for buffer in reassign_bufs do
-				-- Change  data in Windows
-				-- end
 			end
 		})
 	end
@@ -249,7 +277,20 @@ function M.add_buffer(bufnr, tabnr, winnr, buffername, config)
 
 	M.add_tab(tabnr)
 
-	Tabs["" .. tabnr]["buffers"][#Tabs["" .. tabnr]["buffers"] + 1] = bufnr
+	-- HACK: to check if the Tab list already contains the bufnr.
+	-- Edge case is captured when setting up resession, which opens one of
+	-- the tabs
+	-- This validation can be handled in a better way, which would check all
+	-- BTW tables
+	local buffer_in_tablist = false
+	for _, tab_bufnr in pairs(Tabs["" .. tabnr]["buffers"]) do
+		if bufnr == tab_bufnr then
+			buffer_in_tablist = true
+		end
+	end
+	if not buffer_in_tablist then
+		Tabs["" .. tabnr]["buffers"][#Tabs["" .. tabnr]["buffers"] + 1] = bufnr
+	end
 
 
 	--check if winnr exists in Tabs table
@@ -338,6 +379,19 @@ function M.assign_key(buffername, bufferpath)
 	return { char, char_idx }
 end
 
+function M.verify_current_file()
+	local filename = vim.fn.expand("<afile>")
+	-- If buffer does not have a filename, then it may be a temporary
+	-- use buffer, and would not have been added.
+	if filename == "" then
+		return
+	end
+
+	local bufnr = vim.fn.bufnr(filename)
+
+	return bufnr
+end
+
 function M.add_tab(tabnr)
 	if Tabs["" .. tabnr] == nil then
 		Tabs["" .. tabnr] = {}
@@ -352,18 +406,6 @@ function M.add_window(winnr, tabnr)
 		Windows["" .. winnr]["buffers"] = {}
 		Windows["" .. winnr]["tab"] = tabnr
 	end
-end
-function M.verify_current_file()
-	local filename = vim.fn.expand("<afile>")
-	-- If buffer does not have a filename, then it may be a temporary
-	-- use buffer, and would not have been added.
-	if filename == "" then
-		return
-	end
-
-	local bufnr = vim.fn.bufnr(filename)
-
-	return bufnr
 end
 
 M.edit_buffer_tab = function(bufnr)
