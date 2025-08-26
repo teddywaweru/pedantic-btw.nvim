@@ -88,6 +88,7 @@ function M.add_autocmds(config)
 		end
 	})
 
+	-- WARNING: Adding Windows and Tabs outside add_buffer funcs may lead to undefined behaviour caused by other plugins
 	vim.api.nvim_create_augroup("PBTWTabNew", { clear = true })
 	vim.api.nvim_create_autocmd("TabNew", {
 		desc = "Adds Buffer to its window list when opened for the first time",
@@ -164,7 +165,6 @@ function M.add_autocmds(config)
 					return
 				end
 				if Windows["" .. closed_winnr] == nil then
-					print("Not triggered?")
 					return
 				end
 
@@ -227,6 +227,7 @@ function M.add_autocmds(config)
 				return
 			end
 
+			-- Update Keys
 			if #Keys > 0 then
 				for i = 0, #Keys do
 					if Buffers["" .. bufnr]["key"] == Keys[i] then
@@ -234,10 +235,31 @@ function M.add_autocmds(config)
 					end
 				end
 			end
+			-- Update Tabs
+			local tabnr = Buffers["" .. bufnr]["tab"]
+			for idx, tab_bufnr in ipairs(Tabs["" .. tabnr]["buffers"]) do
+				if tab_bufnr == bufnr then
+					table.remove(Tabs["" .. tabnr]["buffers"], idx)
+				end
+			end
+
+			-- Update Windows
+			local winnr = Buffers["" .. bufnr]["window"]
+
+			-- NOTE: If entire window is closed, Windows is updated in the WiClosed autocmd
+			if Windows["" .. winnr] == nil then
+				return
+			end
+			for idx, win_bufnr in ipairs(Windows["" .. winnr]["buffers"]) do
+				if win_bufnr == bufnr then
+					table.remove(Windows["" .. winnr]["buffers"], idx)
+				end
+			end
 			if type(Buffers["" .. bufnr]) == "table" then
 				Buffers["" .. bufnr] = nil
 			end
 		end
+
 	})
 
 	-- vim.api.nvim_create_augroup("PBTWBufEnter", { clear = true })
@@ -272,6 +294,12 @@ function M.add_buffer(bufnr, tabnr, winnr, buffername, config)
 
 	local bufferpath = vim.api.nvim_buf_get_name(vim.fn.bufnr())
 
+	-- Check if bufnr exists
+	for _bufnr, _ in pairs(Buffers) do
+		if bufnr == tonumber(_bufnr) then
+			return
+		end
+	end
 
 	-- Updates tabs list
 
@@ -311,7 +339,20 @@ function M.add_buffer(bufnr, tabnr, winnr, buffername, config)
 		-- Updates windows list
 
 		M.add_window(winnr, tabnr)
-		Windows["" .. winnr]["buffers"][#Windows["" .. winnr]["buffers"] + 1] = bufnr
+		-- HACK: to check if the Tab list already contains the bufnr.
+		-- Edge case is captured when setting up resession, which opens one of
+		-- the tabs
+		-- This validation can be handled in a better way, which would check all
+		-- BTW tables
+		local buffer_in_windowlist = false
+		for _, win_bufnr in ipairs(Windows["" .. winnr]["buffers"]) do
+			if bufnr == tonumber(win_bufnr) then
+				buffer_in_windowlist = true
+			end
+		end
+		if not buffer_in_windowlist then
+			Windows["" .. winnr]["buffers"][#Windows["" .. winnr]["buffers"] + 1] = bufnr
+		end
 		Windows["" .. winnr]["tab"] = tabnr
 	end
 

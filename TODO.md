@@ -26,7 +26,7 @@
 - [] Add TabNew WinNew autocmd
 - [] Buffer is still listed after being deleted when using vifm.vim
 - [] Handle buffers that are not loaded during a session?
-- [] 
+- [x] Buffers are placed in the wrong Tabs when session is initialized
 
 ## User Experience
 - [x] Setting up highlighting colors for texts and floating window layout
@@ -56,6 +56,7 @@
 - [] Show a help menu for special keys(or to enable buffer position editing mode)
 - [] Reloading the BTW tables?
 - [] Handling new entry validations?
+- [] Windows Table requires validation of bufnrs
 
 
 ## User Opts Table

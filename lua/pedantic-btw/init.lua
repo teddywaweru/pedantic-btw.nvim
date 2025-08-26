@@ -67,7 +67,6 @@ function M.select_buffer()
 		for bufnr, buffer_details in pairs(Buffers) do
 			if char == buffer_details["key"] then
 				vim.api.nvim_buf_delete(0, { force = true })
-				vim.notify("Tab page selected: " .. buffer_details["tab"])
 				vim.api.nvim_set_current_tabpage(buffer_details["tab"])
 				vim.api.nvim_set_current_win(buffer_details["window"])
 				vim.cmd("b " .. bufnr)
@@ -105,20 +104,20 @@ function M.save_btws()
 	local new_tabnr = 1
 	local store_tabs = {}
 	local store_buffers = Buffers
-	for _, tab in pairs(Tabs) do
-		-- Update the tabnr in Buffers
-		for _, bufnr in pairs(tab["buffers"]) do
-			store_buffers["" .. bufnr]["tab"] = new_tabnr
-		end
-		-- tab["buffers"] = nil
-		store_tabs["" .. new_tabnr] = tab
-		store_tabs["" .. new_tabnr]["buffers"] = nil
+	local vim_tabs = vim.api.nvim_list_tabpages()
+	for _,vim_tab in ipairs(vim_tabs) do
+				-- Update the tabnr in Buffers
+				for _, bufnr in pairs(Tabs["" .. vim_tab]["buffers"]) do
+					store_buffers["" .. bufnr]["tab"] = new_tabnr
+				end
+				-- tab["buffers"] = nil
+				store_tabs["" .. new_tabnr] = Tabs["" .. vim_tab]
+				store_tabs["" .. new_tabnr]["buffers"] = nil
 
-		-- vim.notify("Here is the current tabnr: " .. tabnr)
-		new_tabnr = new_tabnr + 1
+				new_tabnr = new_tabnr + 1
 	end
 
-	return { Buffers = store_buffers, Windows = Windows, Tabs = store_tabs }
+	return { Buffers = store_buffers, Windows = Windows, Tabs = store_tabs, Keys = Keys }
 end
 
 function M.print_bufferlist()
@@ -130,7 +129,6 @@ function M.print_bufferlist()
 end
 
 function M.print_tabs()
-	-- vim.notify("Called Print Tabs" .. Tabs[1])
 	for tabnr, tab_tables in pairs(Tabs) do
 		print("Tab Number " .. tabnr)
 		for k, v in pairs(tab_tables) do
@@ -177,7 +175,6 @@ function M.load_session(data)
 	local windows = {}
 	for tabnr, tab_details in pairs(tabs) do
 		tab_details["buffers"] = {}
-		vim.notify("Here is the current tabnr: " .. tabnr)
 		local winnrs = vim.api.nvim_tabpage_list_wins(tonumber(tabnr))
 		tab_details["windows"] = winnrs
 
@@ -221,12 +218,14 @@ function M.load_session(data)
 	Tabs = tabs
 	Buffers = buffers
 	Windows = windows
+	Keys = data["Keys"]
 end
 
 function M.clear_data()
 	Buffers = {}
 	Windows = {}
 	Tabs = {}
+	Keys = {}
 end
 
 return M
