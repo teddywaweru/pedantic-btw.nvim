@@ -262,27 +262,42 @@ function M.add_autocmds(config)
 
 	})
 
-	-- vim.api.nvim_create_augroup("PBTWBufEnter", { clear = true })
-	-- vim.api.nvim_create_autocmd("BufEnter", {
-	-- 	desc = "Update the bufferlist when buffer is saved",
-	-- 	group = "PBTWBufEnter",
-	-- 	callback = function()
-	-- 		local curr_bufnr = M.verify_current_file()
-	-- 		if curr_bufnr == nil then
-	-- 			return
-	-- 		end
-	-- 		for bufnr, values in pairs(Buffers) do
-	-- 				vim.notify("Iterating through Buffers. Bufnr: " .. bufnr .. "  curr:  " .. curr_bufnr)
-	-- 				vim.notify("Iterating through Tabs. Tabs: " .. values["tab"])
-	-- 			if bufnr == curr_bufnr then
-	-- 				vim.api.nvim_set_current_tabpage(values["tab"])
-	-- 				vim.cmd("b " .. curr_bufnr)
-	-- 				vim.notify("Calling BufLeave")
-	-- 				vim.notify("Bufnr:    " .. curr_bufnr)
-	-- 			end
-	-- 		end
-	-- 	end
-	-- })
+	vim.api.nvim_create_augroup("PBTWBufEnter", { clear = true })
+	vim.api.nvim_create_autocmd("BufEnter", {
+		desc = "Update the bufferlist when buffer is saved",
+		group = "PBTWBufEnter",
+		callback = function()
+			local curr_bufnr = M.verify_current_file()
+			if curr_bufnr == nil then
+				return
+			end
+			for idx,buf in pairs(vim.fn.getbufinfo()) do
+				if buf.bufnr == curr_bufnr then
+					if buf.loaded then
+			-- vim.notify("This buffer has already been loaded")
+						
+					end
+			-- vim.notify("Opening this buffer" ..  buf.name)
+				end
+
+			end
+
+		-- 	local curr_bufnr = M.verify_current_file()
+		-- 	if curr_bufnr == nil then
+		-- 		return
+		-- 	end
+		-- 	for bufnr, values in pairs(Buffers) do
+		-- 			vim.notify("Iterating through Buffers. Bufnr: " .. bufnr .. "  curr:  " .. curr_bufnr)
+		-- 			vim.notify("Iterating through Tabs. Tabs: " .. values["tab"])
+		-- 		if bufnr == curr_bufnr then
+		-- 			vim.api.nvim_set_current_tabpage(values["tab"])
+		-- 			vim.cmd("b " .. curr_bufnr)
+		-- 			vim.notify("Calling BufLeave")
+		-- 			vim.notify("Bufnr:    " .. curr_bufnr)
+		-- 		end
+		-- 	end
+		end
+	})
 end
 
 function M.add_buffer(bufnr, tabnr, winnr, buffername, config)
@@ -460,25 +475,19 @@ end
 ---@return table
 M.random_key = function()
 	for i = 33, 126 do
-		for key in Keys do
-			if key ~= string.char(i) then
-				return string.char(i)
+	local valid_key = true
+		for key in pairs(Keys) do
+			if key == string.char(i) then
+				valid_key = false
+				break
 			end
 		end
-		if i == 126 then
-			print("Unable to assign a key. Failed")
-			return { "Failed", 999999 }
-		end
+			return { string.char(i) , 99}
 	end
-	return { "XXXXX", 3 }
 end
 
 ---@return table
 function M.key_from_bufferpath(bufferpath)
-	for key_idx = 0, #bufferpath do
-		print("" .. key_idx)
-	end
-	-- TODO:
 	return { "XXXXX", 3 }
 end
 

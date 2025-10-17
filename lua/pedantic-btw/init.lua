@@ -150,6 +150,10 @@ function M.print_windows()
 	end
 end
 
+function M.get_btws()
+	return {Buffers = Buffers, Windows = Windows, Tabs = Tabs}
+end
+
 -- Change values of bufferlist
 function M.edit_bufferlist(buf)
 end
