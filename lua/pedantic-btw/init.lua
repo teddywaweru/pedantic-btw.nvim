@@ -177,6 +177,7 @@ function M.save_btws()
 
 				new_tabnr = new_tabnr + 1
 	end
+	print("Saved session btws")
 
 	return { Buffers = store_buffers, Windows = Windows, Tabs = store_tabs, Keys = Keys }
 end
@@ -186,6 +187,7 @@ function M.print_bufferlist()
 		for k, v in pairs(buffer_details) do
 			print("" .. k .. ":" .. tostring(v))
 		end
+			print("....................")
 	end
 end
 
@@ -207,6 +209,15 @@ function M.print_windows()
 			else
 				print("" .. k .. ":" .. v)
 			end
+		end
+	end
+end
+
+function M.print_keys()
+	for category, keys in pairs(Keys) do
+		print("Keys Category" .. category)
+		for _,key in pairs(keys) do
+			print("" ..  key, ",")
 		end
 	end
 end
