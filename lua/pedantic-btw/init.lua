@@ -40,11 +40,14 @@ function M.buffer_list()
 	end
 	vim.cmd.redraw()
 
-	M.select_buffer()
+	M.handle_user_input()
+
+	-- M.select_buffer()
 end
 
--- Handle buffer selection displayed from buffer_list() function
-function M.select_buffer()
+-- Handle User Input after Bufferlist is displayed
+--- @var input_level String
+function M.handle_user_input(input_level)
 	while true do
 		local ok, char = pcall(vim.fn.getcharstr)
 		if not ok then
@@ -81,6 +84,10 @@ function M.select_buffer()
 	end
 end
 
+-- Handle buffer selection displayed from buffer_list() function
+--- @var char String
+--- @return boolean
+function M.select_buffer_on_first_key(char)
 		local buffers = 0
 		for _, _ in pairs(Buffers) do
 			buffers = buffers + 1
@@ -88,12 +95,9 @@ end
 
 		local idx = 0
 		for bufnr, buffer_details in pairs(Buffers) do
-			if char == buffer_details["key"] then
-				vim.api.nvim_buf_delete(0, { force = true })
-				vim.api.nvim_set_current_tabpage(buffer_details["tab"])
-				vim.api.nvim_set_current_win(buffer_details["window"])
-				vim.cmd("b " .. bufnr)
-				return
+			if char == buffer_details["first_key"] then
+				M.load_buffer_pedantically(bufnr, buffer_details)
+				return true
 			else
 				if idx == buffers - 1 then
 					-- vim.api.nvim_buf_delete(0, { force = true })
