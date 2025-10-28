@@ -395,13 +395,17 @@ end
 --if other characters have already been assigned to other open buffers.
 ---@var buffername
 ---@var bufferpath
----@return table{string, int}
-function M.assign_key(buffername, bufferpath)
-	local char, char_idx = nil, nil
-	if #Keys == 0 then
+---@return string, integer|nil, string|nil
+function M.assign_key( buffername)
+	local char, char_idx, position = nil, nil, nil
+	if Keys["first_key"] == nil then
+		Keys["first_key"] = {}
 		char = buffername:sub(1, 1)
+
 		char_idx = 1
-		table.insert(Keys, char)
+		position = "first_key"
+
+		table.insert(Keys["first_key"], char)
 	else
 		for idx = 1, #buffername do
 			if idx == #buffername then

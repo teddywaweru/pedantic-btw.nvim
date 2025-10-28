@@ -9,11 +9,12 @@ Tabs = {}
 -- with the winnr set as the key value
 Windows = {}
 Keys = {}
-ExitKeys = {}
+Keys["exit"] = {"q"}
+Keys["second_key_trigger"] = {"/"}
 function M.setup(opts)
 	if opts["exit_keys"] then
 		for _, key in ipairs(opts["exit_keys"]) do
-			table.insert(ExitKeys, key)
+			table.insert(Keys["exit"], key)
 		end
 	end
 
@@ -51,7 +52,8 @@ function M.select_buffer()
 			vim.api.nvim_buf_delete(0, { force = true })
 			break
 		end
-		for _, exit_key in pairs(ExitKeys) do
+
+		for _, exit_key in pairs(Keys["exit"]) do
 			if char == exit_key then
 				vim.api.nvim_buf_delete(0, { force = true })
 				return
