@@ -228,10 +228,22 @@ function M.add_autocmds(config)
 			end
 
 			-- Update Keys
-			if #Keys > 0 then
-				for i = 0, #Keys do
-					if Buffers["" .. bufnr]["key"] == Keys[i] then
-						Keys[i] = nil
+			if Buffers["first_key"] ~=nil then
+				if #Keys["first_key"] ~=nil then
+					for i = 0, #Keys["first_key"] do
+						if Buffers["" .. bufnr]["key"] == Keys["first_key"][i] then
+							Keys["first_key"][i] = nil
+						end
+					end
+				end
+			else if Buffers["second_key"] ~= nil then
+				if #Keys["second_key"] ==nil then
+					vim.notify("Error. No Secondary Key assigned to buffer:" .. filename)
+					return
+				end
+				for i = 0, #Keys["second_key"] do
+					if Buffers["" .. bufnr]["key"] == Keys["second_key"][i] then
+						Keys["second_key"][i] = nil
 					end
 				end
 			end
@@ -378,16 +390,20 @@ function M.add_buffer(bufnr, tabnr, winnr, buffername, config)
 		Buffers["" .. bufnr]["bufferpath"] = bufferpath
 		Buffers["" .. bufnr]["window"] = winnr
 		Buffers["" .. bufnr]["tab"] = tabnr
+		Buffers["" .. bufnr]["first_key"] = nil
+		Buffers["" .. bufnr]["second_key"] = nil
 
 		-- TODO: might fail if key is not assigned.
 		-- Tighten edge cases
-		local key = M.assign_key(buffername, bufferpath)
-		if key == nil then
+		local char, char_idx, position = M.assign_key(buffername)
+		if char == nil then
+			vim.notify("Unable to assign Key to Buffer" .. buffername)
 			return
 		end
 
-		Buffers["" .. bufnr]["key"] = key[1]
-		Buffers["" .. bufnr]["key_idx"] = key[2]
+		Buffers["" .. bufnr][position] = char
+		vim.notify("valeus for char, position, key_idx, " .. char .. position, char_idx)
+		Buffers["" .. bufnr]["key_idx"] = char_idx
 	end
 end
 
@@ -408,35 +424,54 @@ function M.assign_key( buffername)
 		table.insert(Keys["first_key"], char)
 	else
 		for idx = 1, #buffername do
+			-- If no char is assigned before getting to the end of the buffername,
+			-- assign the second_key
 			if idx == #buffername then
-				char, char_idx = M.key_from_bufferpath(bufferpath)
-				if #char > 1 then
-					char, char_idx = M.random_key()
-					break
-				else
-					break
-				end
-			end
+				if Keys["second_key"] == nil then
+					Keys["second_key"] = {}
+					char = buffername:sub(1,1)
 
-			char = buffername:sub(idx, idx)
+					char_idx = 1
+					position = "second_key"
 
-			for key_idx = 1, #Keys do
-				if char == Keys[key_idx] then
-					break
+					table.insert(Keys["second_key"], char)
 				else
-					if key_idx == #Keys then
-						table.insert(Keys, char)
-						char_idx = idx
-						break
+					char = buffername:sub(idx, idx)
+					for key_idx, key in ipairs(Keys["second_key"]) do
+						if key == char then
+							break
+						elseif key_idx == #Keys["second_key"] then
+
+							char_idx = idx
+							position = "second_key"
+
+							table.insert(Keys["second_key"], char)
+						end
 					end
 				end
-			end
-			if char_idx ~= nil then
-				break
+			else
+				char = buffername:sub(idx, idx)
+				for key_idx = 1, #Keys["first_key"] do
+					if char == Keys["first_key"][key_idx] then
+						break
+					else
+						if key_idx == #Keys["first_key"] then
+
+							char_idx = idx
+							position = "first_key"
+
+							table.insert(Keys["first_key"], char)
+							break
+						end
+					end
+				end
+				if char_idx ~= nil then
+					break
+				end
 			end
 		end
 	end
-	return { char, char_idx }
+	return char, char_idx, position
 end
 
 function M.verify_current_file()
@@ -480,7 +515,7 @@ end
 M.random_key = function()
 	for i = 33, 126 do
 	local valid_key = true
-		for key in pairs(Keys) do
+		for key in pairs(Keys["first_key"]) do
 			if key == string.char(i) then
 				valid_key = false
 				break
