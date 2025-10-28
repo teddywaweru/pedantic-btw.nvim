@@ -103,4 +103,107 @@ end
 local function realtime_update()
 end
 
+function M.display_secondary()
+	local buffers = 0
+	for bufnr, values in pairs(Buffers) do
+		if values["second_key"] ~= nil then
+			buffers = buffers + 1
+		end
+	end
+
+	if buffers == 0 then
+		vim.notify("No buffers added to Bufferlist yet")
+		return 0
+	end
+
+	local buf = vim.api.nvim_create_buf(false, true)
+	local buf_opts = { buf = buf }
+
+	vim.api.nvim_buf_set_name(buf, "BufferList #" .. buf)
+	vim.api.nvim_set_option_value('buftype', 'nofile', buf_opts)
+	vim.api.nvim_set_option_value('swapfile', false, buf_opts)
+	vim.api.nvim_set_option_value('bufhidden', 'wipe', buf_opts)
+	vim.api.nvim_set_option_value('filetype', 'nvim-bufferlist', buf_opts)
+	vim.api.nvim_set_option_value('filetype', 'nvim-bufferlist', buf_opts)
+	vim.api.nvim_set_option_value('buflisted', false, buf_opts)
+
+
+	vim.api.nvim_buf_set_option(buf, 'modifiable', true)
+
+	-- Highlights
+	vim.api.nvim_set_hl(0, "PBTWStylizeLetter",
+		{ fg = '#ff007c', bold = true, ctermfg = 198, cterm = { bold = true }, default = true });
+	vim.api.nvim_set_hl(0, "PBTWStylizePath",
+		{ bg = '#FFFFFF', fg = '#0C1B33', bold = true, ctermfg = 198, cterm = { bold = true }, default = true });
+	vim.api.nvim_set_hl(0, "PBTWStylizeModified",
+		{ bg = '#000000', fg = '#af8000', italic = true, ctermfg = 198, cterm = { bold = true }, default = true });
+
+	local buffer_content = {}
+	local max_chars = 0
+	for bufnr, values in pairs(Buffers) do
+		if values["second_key"] ~= nil then
+			local detail = "" .. values["buffername"]
+
+			if values["modified"] == true then
+				detail = detail .. "(modified)"
+			end
+
+			detail = detail .. "       " .. bufnr
+
+			table.insert(buffer_content, detail)
+
+			if string.len(detail) > max_chars then
+				max_chars = string.len(detail)
+			end
+
+			local filepath = "" .. values["bufferpath"] .. ""
+			table.insert(buffer_content, filepath)
+
+			if string.len(filepath) > max_chars then
+				max_chars = string.len(filepath)
+			end
+
+			table.insert(buffer_content, "")
+		end
+
+	end
+
+	vim.api.nvim_buf_set_lines(buf, 0, -1, false, buffer_content)
+
+	vim.api.nvim_buf_set_option(buf, 'modifiable', false)
+
+	local ui = vim.api.nvim_list_uis()[1]
+	local width = max_chars + 2
+	local height = #buffer_content
+	local win_opts = {
+		relative = "editor",
+		width = width,
+		height = height,
+		col = (ui.width / 2) + (width / 2),
+		row = (ui.height / 2) + (height / 2),
+		anchor = "SE",
+		title = "BufferList",
+		style = "minimal",
+		border = "rounded",
+	}
+
+	local win = vim.api.nvim_open_win(buf, 1, win_opts)
+	vim.api.nvim_win_set_config(win, win_opts)
+
+
+	local i = 0
+	for _, values in pairs(Buffers) do
+		vim.hl.range(buf, 1, "PBTWStylizeLetter", { i, values["key_idx"] - 1 }, { i, values["key_idx"] })
+
+		if values["modified"] == true then
+			local start_idx = string.len(values["buffername"])
+
+			vim.hl.range(buf, 1, "PBTWStylizeModified", { i, start_idx }, { i, start_idx + 10 }) --(modified) text is 10 chars
+		end
+
+		vim.hl.range(buf, 1, "PBTWStylizePath", { i + 1, 0 }, { i + 1, -1 })
+		i = i + 3
+	end
+
+end
 return M
