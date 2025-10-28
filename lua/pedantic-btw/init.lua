@@ -59,6 +59,27 @@ function M.select_buffer()
 				return
 			end
 		end
+		if char == Keys["second_key_trigger"][1] then
+				vim.api.nvim_buf_delete(0, { force = true })
+			require("bufferlist").display_secondary()
+			vim.cmd.redraw()
+			M.handle_user_input("second")
+			break
+		else
+			if input_level == "second" then
+				if M.select_buffer_on_second_key(char) then
+					vim.notify("triggering from second level?")
+					break
+				end
+			else
+				if M.select_buffer_on_first_key(char) then
+					vim.notify("triggering from first level?")
+					break
+				end
+			end
+		end
+	end
+end
 
 		local buffers = 0
 		for _, _ in pairs(Buffers) do
@@ -77,12 +98,46 @@ function M.select_buffer()
 				if idx == buffers - 1 then
 					-- vim.api.nvim_buf_delete(0, { force = true })
 					vim.notify("Incorrect Key?")
-					break
 				end
 			end
 			idx = idx + 1
 		end
+		return false
+end
+
+--- @var char String
+--- @return boolean
+function M.select_buffer_on_second_key(char)
+	local buffers = 0
+	for _, values in pairs(Buffers) do
+		if values["second_key"]~=nil then
+			buffers = buffers + 1
+		end
 	end
+	if buffers ==0 then
+	vim.notify("No secondary keys assigned")
+	end
+	local idx = 0
+	for bufnr, buffer_details in pairs(Buffers) do
+		if char == buffer_details["second_key"] then
+			M.load_buffer_pedantically(bufnr, buffer_details)
+			return true
+		else
+			if idx == buffers - 1 then
+				-- vim.api.nvim_buf_delete(0, { force = true })
+				vim.notify("Incorrect Key?")
+			end
+		end
+		idx = idx + 1
+	end
+	return false
+end
+
+function M.load_buffer_pedantically(bufnr, buffer_details)
+	vim.api.nvim_buf_delete(0, { force = true })
+	vim.api.nvim_set_current_tabpage(buffer_details["tab"])
+	vim.api.nvim_set_current_win(buffer_details["window"])
+	vim.cmd("b " .. bufnr)
 end
 
 function M.edit_buffer_tab(bufnr)
