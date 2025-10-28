@@ -525,9 +525,4 @@ M.random_key = function()
 	end
 end
 
----@return table
-function M.key_from_bufferpath(bufferpath)
-	return { "XXXXX", 3 }
-end
-
 return M
